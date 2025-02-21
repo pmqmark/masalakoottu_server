@@ -8,8 +8,12 @@ exports.getUserByEmail = async (email) => {
     return await User.findOne({ email }).lean();
 }
 
-exports.getUserByMobile = async (phone) => {
-    return await User.findOne({ phone }).lean();
+exports.getUserByMobile = async (mobile) => {
+    return await User.findOne({ mobile }).lean();
+}
+
+exports.getUserByGoogleId = async (sub) => {
+    return await User.findOne({ googleId: sub }).lean();
 }
 
 exports.getUserById = async (id) => {
