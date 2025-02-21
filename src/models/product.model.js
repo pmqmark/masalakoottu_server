@@ -1,0 +1,116 @@
+const mongoose = require('mongoose');
+
+const productSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    brand: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    discount: {
+      type: Number,
+      default: 0, // Percentage discount
+    },
+    images: [
+      {
+        location: {
+          type: String,
+          required: true,
+        },
+        name: {
+          type: String,
+        },
+      },
+    ],
+    stock: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    sold: {
+      type: Number,
+      default: 0,
+    },
+    ratings: {
+      average: {
+        type: Number,
+        default: 0,
+      },
+      count: {
+        type: Number,
+        default: 0,
+      },
+      reviews: [
+        {
+          userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+          },
+          rating: {
+            type: Number,
+            min: 1,
+            max: 5,
+          },
+          comment: {
+            type: String,
+          },
+          createdAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+    },
+    variations: [
+      {
+        name: {
+          type: String, // e.g., 'Color', 'Size'
+        },
+        options: [
+          {
+            value: {
+              type: String, // e.g., 'Red', 'Medium'
+            },
+            additionalPrice: {
+              type: Number, 
+              default: 0,
+            },
+          },
+        ],
+      },
+    ],
+
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+
+    tags: [
+      {
+        type: String,
+      },
+    ],
+    
+  },
+  {
+    timestamps: true, 
+  }
+);
+
+exports.Product = mongoose.model('Product', productSchema);
