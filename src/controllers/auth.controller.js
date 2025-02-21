@@ -12,11 +12,8 @@ exports.userLogin = async (req, res) => {
     const { email, mobile } = req.body;
 
     try {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const indianNumberRegex = /^(?:\+91[\s-]?|91[\s-]?)?[6-9]\d{9}$/;
-
         let user;
-        if (emailRegex.test(email)) {
+        if (validateEmail(email)) {
             const emailCaseRegex = new RegExp(email, 'i')
 
             user = await getUserByEmail(emailCaseRegex)
@@ -29,7 +26,7 @@ exports.userLogin = async (req, res) => {
                 })
             }
         }
-        else if (indianNumberRegex.test(mobile)) {
+        else if (validateMobile(mobile)) {
             user = await getUserByMobile(mobile)
             if (!user) {
                 return res.status(400).json({
