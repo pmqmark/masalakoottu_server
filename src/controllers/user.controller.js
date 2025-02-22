@@ -3,6 +3,7 @@ const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, get
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
+const { genderList, roleList } = require("../config/data");
 
 
 // Accessible to Public
@@ -82,7 +83,7 @@ exports.registerUserCtrl = async (req, res) => {
             firstName, lastName, role: 'user', credType
         }
 
-        if (['male', 'female', 'other']?.includes(gender)) {
+        if (genderList?.includes(gender)) {
             createObj.gender = gender
         }
 
@@ -195,7 +196,7 @@ exports.createUserCtrl = async (req, res) => {
             firstName, lastName, role: 'user', credType
         }
 
-        if (['male', 'female', 'other']?.includes(gender)) {
+        if (genderList?.includes(gender)) {
             createObj.gender = gender
         }
 
@@ -265,7 +266,7 @@ exports.updateUserCtrl = async (req, res, next) => {
             updateObj.lastName = lastName;
         }
 
-        if (['male', 'female', 'other']?.includes(gender)) {
+        if (genderList?.includes(gender)) {
             updateObj.gender = gender
         }
 
@@ -410,11 +411,11 @@ exports.getManyUsersCtrl = async (req, res, next) => {
 
         const filters = {};
 
-        if(['male', 'female', 'other']?.includes?.(gender)){
+        if(genderList?.includes?.(gender)){
             filters.gender = gender
         }
 
-        if(['user', 'admin']?.includes?.(role)){
+        if(roleList?.includes?.(role)){
             filters.role = role
         }
 

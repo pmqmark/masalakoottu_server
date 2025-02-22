@@ -9,15 +9,9 @@ const productSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
     },
     brand: {
       type: String,
-      required: true,
-    },
-    category: {
-      type: String,
-      required: true,
     },
     price: {
       type: Number,
@@ -36,47 +30,38 @@ const productSchema = new mongoose.Schema(
         name: {
           type: String,
         },
+        key: {
+          type: String,
+        },
       },
     ],
+
     stock: {
       type: Number,
-      required: true,
       default: 0,
     },
-    sold: {
-      type: Number,
-      default: 0,
-    },
-    ratings: {
-      average: {
-        type: Number,
-        default: 0,
-      },
-      count: {
-        type: Number,
-        default: 0,
-      },
-      reviews: [
-        {
-          userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-          },
-          rating: {
-            type: Number,
-            min: 1,
-            max: 5,
-          },
-          comment: {
-            type: String,
-          },
-          createdAt: {
-            type: Date,
-            default: Date.now,
-          },
+
+    reviews: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
         },
-      ],
-    },
+        rating: {
+          type: Number,
+          min: 1,
+          max: 5,
+        },
+        comment: {
+          type: String,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
     variations: [
       {
         name: {
@@ -88,7 +73,7 @@ const productSchema = new mongoose.Schema(
               type: String, // e.g., 'Red', 'Medium'
             },
             additionalPrice: {
-              type: Number, 
+              type: Number,
               default: 0,
             },
           },
@@ -106,10 +91,15 @@ const productSchema = new mongoose.Schema(
         type: String,
       },
     ],
-    
+
+    isArchived: {
+      type: Boolean,
+      default: false
+  },
+
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

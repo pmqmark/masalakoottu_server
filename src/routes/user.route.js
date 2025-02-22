@@ -18,4 +18,4 @@ userRouter.patch('/:id', updateUserStatusCtrl)
 userRouter.get('', getManyUsersCtrl)
 userRouter.get('/:id', getUserByIdCtrl)
 
-module.exports = {userRouter}
+module.exports = { userRouter }

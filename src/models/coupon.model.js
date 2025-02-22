@@ -24,7 +24,7 @@ const couponSchema = new mongoose.Schema({
    minValue: {
       type: Number,
    },
-   isActive: {
+   isAvailable: {
       type: Boolean,
       default: true
    }
