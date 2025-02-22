@@ -2,7 +2,7 @@ const { isValidObjectId } = require("mongoose");
 const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
-const { validateOTPWithMobile, validateOTPWithEmail } = require("../services/auth.service");
+const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
 
 
 // Accessible to Public
@@ -38,7 +38,18 @@ exports.registerUserCtrl = async (req, res) => {
             validOtp = await validateOTPWithEmail({ email, otp });
         }
 
-        if (!validOtp) {
+        if (validOtp) {
+            const isOTPVerified = await OTPVerificationStatus(validOtp?._id)
+
+            if (!isOTPVerified) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'OTP is not verified',
+                    data: null,
+                    error: "UNVERIFIED_OTP"
+                });
+            }
+        } else {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid or expired OTP',

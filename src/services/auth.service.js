@@ -52,37 +52,53 @@ exports.sendOTPViaSMS = async (mobile, OTP) => {
     }
 };
 
-exports.getOTPWithMobile = async(mobile)=>{
+exports.getOTPWithMobile = async (mobile) => {
     return await Otp.findOne({ mobile }).lean()
 }
 
-exports.getOTPWithEmail = async(email)=>{
+exports.getOTPWithEmail = async (email) => {
     return await Otp.findOne({ email }).lean()
 }
 
-exports.deleteOTP = async(id)=>{
+exports.deleteOTP = async (id) => {
     return await Otp.findByIdAndDelete(id);
 }
 
-exports.createOTP = async(obj)=>{
+exports.createOTP = async (obj) => {
     return await Otp.create(obj)
 }
 
-exports.validateOTPWithMobile = async({mobile, otp})=>{
+exports.validateOTPWithMobile = async ({ mobile, otp }) => {
     return await Otp.findOne({
         mobile: mobile.trim(),
         otp: otp.trim(),
     });
 }
 
-exports.validateOTPWithEmail = async({email, otp})=>{
+exports.validateOTPWithEmail = async ({ email, otp }) => {
     return await Otp.findOne({
         email: email.trim(),
         otp: otp.trim(),
     });
 }
 
-exports.verifyGoogleIdToken = async(idToken)=>{
+exports.verifyOTP = async (id) => {
+    return await Otp.findByIdAndUpdate(id, {
+        $set: { isVerified: true }
+    }, { new: true })
+}
+
+exports.OTPVerificationStatus = async (id) => {
+    const otpDoc = await Otp.findById(id)
+
+    if (otpDoc?.isVerified === true) {
+        return true;
+    }
+
+    return false
+}
+
+exports.verifyGoogleIdToken = async (idToken) => {
     return await client.verifyIdToken({
         idToken,
         audience: process.env.GOOGLE_CLIENT_ID,

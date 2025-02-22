@@ -1,9 +1,9 @@
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt.util');
-const { getUserByEmail, getUserByMobile, createUser, getUserByGoogleId } = require('../services/user.service');
+const { getUserByEmail, getUserByMobile, createUser, getUserByGoogleId, updatePassword, getUserById } = require('../services/user.service');
 const { isValidObjectId } = require("mongoose");
 const { validateMobile, validateEmail } = require("../utils/validate.util");
 const { generateOTP } = require("../utils/helper.util");
-const { sendOTPViaSMS, getOTPWithMobile, deleteOTP, createOTP, validateOTPWithMobile, verifyGoogleIdToken, getOTPWithEmail, sendOTPViaEmail, validateOTPWithEmail } = require("../services/auth.service");
+const { sendOTPViaSMS, getOTPWithMobile, deleteOTP, createOTP, validateOTPWithMobile, verifyGoogleIdToken, getOTPWithEmail, sendOTPViaEmail, validateOTPWithEmail, verifyOTP, OTPVerificationStatus } = require("../services/auth.service");
 const { comparePasswords } = require("../utils/password.util");
 
 
@@ -219,7 +219,7 @@ exports.regenerateTokens = async (req, res) => {
 
 }
 
-
+// mobile/email
 exports.sendOTPHandler = async (req, res) => {
     try {
         const { mobile, email } = req.body;
@@ -241,11 +241,11 @@ exports.sendOTPHandler = async (req, res) => {
         const otpObj = {};
 
         // adding creds to otpObj ;
-        if (mobile) {
+        if (validateMobile(mobile)) {
             otpObj.mobile = mobile;
             otpExisting = await getOTPWithMobile(mobile)
         }
-        else if (email) {
+        else if (validateEmail(email)) {
             otpObj.email = email;
             otpExisting = await getOTPWithEmail(email)
         }
@@ -272,7 +272,7 @@ exports.sendOTPHandler = async (req, res) => {
             })
         }
 
-        // sent otp to mail using fast2sms
+        // sent otp to mobile/mail using fast2sms/nodemailer
         try {
             if (mobile) {
                 await sendOTPViaSMS(mobile, OTP);
@@ -307,6 +307,7 @@ exports.sendOTPHandler = async (req, res) => {
     }
 }
 
+// mobile/email & otp
 exports.verifyOTPHandler = async (req, res) => {
     try {
         const { otp, mobile, email } = req.body;
@@ -332,10 +333,10 @@ exports.verifyOTPHandler = async (req, res) => {
         // Validate OTP 
         let validOtp;
 
-        if (mobile) {
+        if (validateMobile(mobile)) {
             validOtp = await validateOTPWithMobile({ mobile, otp });
         }
-        else if (email) {
+        else if (validateEmail(email)) {
             validOtp = await validateOTPWithEmail({ email, otp });
         }
 
@@ -348,45 +349,12 @@ exports.verifyOTPHandler = async (req, res) => {
             });
         }
 
-        await deleteOTP(validOtp._id);
+        await verifyOTP(validOtp?._id)
 
-        let user;
-
-        if (mobile) {
-            user = await getUserByMobile(mobile);
-        }
-        else if (email) {
-            user = await getUserByEmail(email)
-        }
-
-        if (user) {
-            if (user.isBlocked) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Blocked User',
-                    data: null,
-                    error: "ACCESS_DENIED"
-                });
-            }
-        }
-        else {
-            const createObj = { role: 'user' }
-            if (mobile) { createObj.mobile = mobile }
-            else if (email) { createObj.email = email }
-
-            const newUser = await createUser(createObj);
-            user = await newUser.save();
-        }
-
-        const accessToken = generateAccessToken({ userId: user._id, role: user.role });
-        const refreshToken = generateRefreshToken({ userId: user._id, role: user.role });
-
-        const { password, ...userInfo } = user.toObject()
-
-        return res.status(user.name ? 200 : 201).json({
+        return res.status(200).json({
             success: true,
             message: "Success",
-            data: { userInfo, accessToken, refreshToken },
+            data: null,
             error: null
         });
 
@@ -400,6 +368,97 @@ exports.verifyOTPHandler = async (req, res) => {
         });
     }
 };
+
+// In Forgot password ?
+// mobile/email & otp & password
+exports.resetPassword = async (req, res) => {
+    try {
+        const { otp, mobile, email, password } = req.body;
+        if (!otp) {
+            return res.status(400).json({
+                success: false,
+                message: 'OTP is required',
+                data: null,
+                error: "INVALID_DATA"
+            });
+        }
+        if (!(validateMobile(mobile) || validateEmail(email))) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email or mobile number is required',
+                data: null,
+                error: "INVALID_DATA"
+            });
+        }
+
+        // Validate OTP 
+        let validOtp;
+        let credType;
+        if (validateMobile(mobile)) {
+            validOtp = await validateOTPWithMobile({ mobile, otp });
+            credType = 'mobile';
+        }
+        else if (validateEmail(email)) {
+            validOtp = await validateOTPWithEmail({ email, otp });
+            credType = 'email'
+        }
+
+        if (validOtp) {
+            const isOTPVerified = await OTPVerificationStatus(validOtp?._id)
+
+            if (!isOTPVerified) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'OTP is not verified',
+                    data: null,
+                    error: "UNVERIFIED_OTP"
+                });
+            }
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired OTP',
+                data: null,
+                error: "INVALID_DATA"
+            });
+        }
+
+        let user;
+        if (credType === 'mobile') {
+            user = await getUserByMobile(mobile)
+        }
+        else if (credType === 'email') {
+            user = await getUserByEmail(email)
+        }
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found',
+                data: null,
+                error: "NOT_FOUND"
+            });
+        }
+
+        await updatePassword(user?._id, password)
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: null,
+            error: null
+        })
+
+    } catch (error) {
+        console.error("resetPassword Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            data: null,
+            error: "An unexpected error occurred. Please try again later."
+        });
+    }
+}
 
 
 

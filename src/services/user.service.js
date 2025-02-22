@@ -1,4 +1,5 @@
-const { User } = require("../models/user.model")
+const { User } = require("../models/user.model");
+const { hashPassword } = require("../utils/password.util");
 
 exports.createUser = async (createObj) => {
     return await User.create(createObj)
@@ -33,5 +34,12 @@ exports.updateUser = async (id, updateObj) => {
 exports.updateUserStatus = async (id, isBlocked) => {
     return await User.findByIdAndUpdate(id, {
         $set: { isBlocked }
+    }, { new: true })
+}
+
+exports.updatePassword = async (id, password) => {
+    const hashedPassword = await hashPassword(password)
+    return await User.findByIdAndUpdate(id, {
+        $set: { password: hashedPassword }
     }, { new: true })
 }
