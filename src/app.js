@@ -7,6 +7,7 @@ const {authRouter }= require('./routes/auth.route')
 
 const cors = require('cors');
 const { userRouter } = require("./routes/user.route");
+const { uploadRouter } = require("./routes/upload.route");
 const PORT = process.env.PORT || 8080
 const ClientURL = process.env.ClientURL;
 const ClientURL2 = process.env.ClientURL2;
@@ -39,7 +40,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.use('/api/auth', authRouter)
-app.use('/api/user', userRouter)
+app.use('/api/users', userRouter)
+app.use('/api/uploads', uploadRouter)
 
 app.use("*", (req, res) => res.status(404).json({
   success: false,

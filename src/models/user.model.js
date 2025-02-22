@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
+const { credTypeList, genderList, roleList } = require('../config/data');
 
 const UserSchema = new mongoose.Schema({
+    credType: {
+        type: String,
+        enum: credTypeList,
+        required: true
+    },
     googleId: { type: String },
 
     firstName: {
@@ -14,7 +20,7 @@ const UserSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        enum: ['male', 'female', 'other']
+        enum: genderList
     },
     email: {
         type: String,
@@ -55,7 +61,7 @@ const UserSchema = new mongoose.Schema({
 
     orderHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
 
-    role: { type: String, default: 'user', enum: ['user', 'admin'] },
+    role: { type: String, default: 'user', enum: roleList },
 
     isBlocked: { type: Boolean, default: false },
 

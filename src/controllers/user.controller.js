@@ -1,5 +1,5 @@
 const { isValidObjectId } = require("mongoose");
-const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers } = require("../services/user.service");
+const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile, getUserByEmail } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
@@ -30,12 +30,23 @@ exports.registerUserCtrl = async (req, res) => {
         }
 
         let validOtp;
-
+        let existingUser;
         if (credType === 'mobile') {
             validOtp = await validateOTPWithMobile({ mobile, otp });
+            existingUser = await getUserByMobile(mobile)
         }
         else if (credType === 'email') {
             validOtp = await validateOTPWithEmail({ email, otp });
+            existingUser = await getUserByEmail(email)
+        }
+
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: 'User already exists',
+                data: null,
+                error: null,
+            })
         }
 
         if (validOtp) {
@@ -68,7 +79,7 @@ exports.registerUserCtrl = async (req, res) => {
         }
 
         const createObj = {
-            firstName, lastName, role: 'user'
+            firstName, lastName, role: 'user', credType
         }
 
         if (['male', 'female', 'other']?.includes(gender)) {
@@ -95,10 +106,12 @@ exports.registerUserCtrl = async (req, res) => {
             throw new Error('FAILED')
         }
 
+        const { password: pwd, ...userInfo } = user?.toObject()
+
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { user },
+            data: { user: userInfo },
             error: null
         })
 
@@ -166,7 +179,7 @@ exports.getUserProfileByIdCtrl = async (req, res, next) => {
 exports.createUserCtrl = async (req, res) => {
     try {
         const { firstName, lastName, gender,
-            email, mobile, password } = req.body;
+            email, mobile, password, credType } = req.body;
 
 
         if (!firstName?.trim()) {
@@ -179,7 +192,7 @@ exports.createUserCtrl = async (req, res) => {
         }
 
         const createObj = {
-            firstName, lastName, role: 'user'
+            firstName, lastName, role: 'user', credType
         }
 
         if (['male', 'female', 'other']?.includes(gender)) {
@@ -395,15 +408,29 @@ exports.getManyUsersCtrl = async (req, res, next) => {
         entries = parseInt(entries)
         const { gender, role, status } = req.query;
 
-        const filters = { gender, role, isBlocked: status === 'blocked' };
+        const filters = {};
 
+        if(['male', 'female', 'other']?.includes?.(gender)){
+            filters.gender = gender
+        }
+
+        if(['user', 'admin']?.includes?.(role)){
+            filters.role = role
+        }
+
+        if (['blocked', 'unblocked']?.includes(status)) {
+            filters.isBlocked = status === 'blocked';
+        }
+
+        console.log({filters})
         let result = await getManyUsers(filters)
+        console.log({result})
 
         if (page && entries) {
             result = result.slice((page - 1) * entries, page * entries)
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: 'success',
             data: { users: result },

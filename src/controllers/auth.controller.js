@@ -1,7 +1,7 @@
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt.util');
 const { getUserByEmail, getUserByMobile, createUser, getUserByGoogleId, updatePassword, getUserById } = require('../services/user.service');
 const { isValidObjectId } = require("mongoose");
-const { validateMobile, validateEmail } = require("../utils/validate.util");
+const { validateMobile, validateEmail, credTypeFinder } = require("../utils/validate.util");
 const { generateOTP } = require("../utils/helper.util");
 const { sendOTPViaSMS, getOTPWithMobile, deleteOTP, createOTP, validateOTPWithMobile, verifyGoogleIdToken, getOTPWithEmail, sendOTPViaEmail, validateOTPWithEmail, verifyOTP, OTPVerificationStatus } = require("../services/auth.service");
 const { comparePasswords } = require("../utils/password.util");
@@ -9,35 +9,50 @@ const { comparePasswords } = require("../utils/password.util");
 
 // user LOGIN
 exports.userLogin = async (req, res) => {
-    const { email, mobile } = req.body;
+    const { credential, password } = req.body;
 
     try {
+        const credType = credTypeFinder(credential);
+
+        if(!credType){
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Credentials',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
         let user;
-        if (validateEmail(email)) {
-            const emailCaseRegex = new RegExp(email, 'i')
+        if (credType === 'email' && validateEmail(credential)) {
+            const emailCaseRegex = new RegExp(credential, 'i')
 
             user = await getUserByEmail(emailCaseRegex)
-            if (!user) {
+
+        }
+        else if (credType === 'mobile' && validateMobile(credential)) {
+            user = await getUserByMobile(credential)
+        }
+
+        if (user) {
+            if (user?.credType !== credType) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Invalid credentials',
+                    message: 'Invalid Credentials',
                     data: null,
                     error: 'BAD_REQUEST'
                 })
             }
-        }
-        else if (validateMobile(mobile)) {
-            user = await getUserByMobile(mobile)
-            if (!user) {
-                return res.status(400).json({
+
+            if (user?.isBlocked) {
+                return res.status(403).json({
                     success: false,
-                    message: 'Invalid credentials',
+                    message: 'Blocked User',
                     data: null,
-                    error: 'BAD_REQUEST'
-                })
+                    error: "ACCESS_DENIED"
+                });
             }
-        }
-        else {
+        } else {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid Credentials',
@@ -47,7 +62,7 @@ exports.userLogin = async (req, res) => {
         }
 
 
-        const isValidPassword = await comparePasswords(req.body.password, user.password);
+        const isValidPassword = await comparePasswords(password, user.password);
         if (!isValidPassword) {
             return res.status(400).json({
                 success: false,
@@ -61,7 +76,7 @@ exports.userLogin = async (req, res) => {
 
         const refreshToken = generateRefreshToken({ userId: user._id, role: user.role })
 
-        const { password, ...userInfo } = user;
+        const { password:pwd, credType:ctype, ...userInfo } = user;
 
         return res.status(200).json({
             success: true,
@@ -140,6 +155,7 @@ exports.googleHandler = async (req, res) => {
                 firstName: name,
                 email,
                 role: 'user',
+                credType: 'googleId',
             }
 
             const newUser = await createUser(createObj);
