@@ -43,3 +43,62 @@ exports.updatePassword = async (id, password) => {
         $set: { password: hashedPassword }
     }, { new: true })
 }
+
+exports.addToCart = async (userId, productId, quantity) => {
+    const user = await User.findById(userId)
+    let cart = user.cart;
+    const itemIndex = cart.findIndex(item => item.productId.toString() === productId);
+
+    if (itemIndex > -1) {
+        cart[itemIndex].quantity += quantity;
+    } else {
+        cart.push({ productId, quantity })
+    }
+
+    user.cart = cart;
+
+    return await user.save();
+}
+
+exports.getCart = async (userId) => {
+    const user = await User.findById(userId);
+    return user.cart
+}
+
+exports.removeFromCart = async (userId, productId) => {
+    const user = await User.findById(userId)
+    let cart = user.cart;
+
+    cart = cart.filter(item => item.productId.toString() !== productId)
+
+    user.cart = cart;
+
+    return await user.save();
+}
+
+exports.addToWishlist = async (userId, productId) => {
+    const user = await User.findById(userId)
+    let wishlist = user.wishlist;
+    
+    wishlist.push(productId)
+
+    user.wishlist = wishlist;
+
+    return await user.save();
+}
+
+exports.getWishlist = async (userId) => {
+    const user = await User.findById(userId);
+    return user.wishlist
+}
+
+exports.removeFromWishlist = async (userId, productId) => {
+    const user = await User.findById(userId)
+    let wishlist = user.wishlist;
+
+    wishlist = wishlist.filter(item => item.productId.toString() !== productId)
+
+    user.wishlist = wishlist;
+
+    return await user.save();
+}

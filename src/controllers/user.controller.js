@@ -1,5 +1,5 @@
 const { isValidObjectId } = require("mongoose");
-const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile, getUserByEmail } = require("../services/user.service");
+const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile, getUserByEmail, addToCart, removeFromCart, getCart, removeFromWishlist, getWishlist, addToWishlist } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
@@ -411,11 +411,11 @@ exports.getManyUsersCtrl = async (req, res, next) => {
 
         const filters = {};
 
-        if(genderList?.includes?.(gender)){
+        if (genderList?.includes?.(gender)) {
             filters.gender = gender
         }
 
-        if(roleList?.includes?.(role)){
+        if (roleList?.includes?.(role)) {
             filters.role = role
         }
 
@@ -423,9 +423,9 @@ exports.getManyUsersCtrl = async (req, res, next) => {
             filters.isBlocked = status === 'blocked';
         }
 
-        console.log({filters})
+        console.log({ filters })
         let result = await getManyUsers(filters)
-        console.log({result})
+        console.log({ result })
 
         if (page && entries) {
             result = result.slice((page - 1) * entries, page * entries)
@@ -435,6 +435,181 @@ exports.getManyUsersCtrl = async (req, res, next) => {
             success: true,
             message: 'success',
             data: { users: result },
+            error: null
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.addToCartCtrl = async (req, res) => {
+    try {
+        const { userId, productId, quantity } = req.body;
+
+        if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Id',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        const updatedUser = await addToCart(userId, productId, quantity);
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { cart: updatedUser?.cart },
+            error: null
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.getCartCtrl = async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        const cart = await getCart(userId)
+        res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { cart },
+            error: null
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+};
+
+exports.removeFromCartCtrl = async (req, res) => {
+    try {
+        const { userId, productId } = req.body;
+
+        if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Id',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        const updatedUser = await removeFromCart(userId, productId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { cart: updatedUser?.cart },
+            error: null
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+
+exports.addToWishlistCtrl = async (req, res) => {
+    try {
+        const { userId, productId } = req.body;
+
+        if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Id',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        const updatedUser = await addToWishlist(userId, productId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { wishlist: updatedUser?.wishlist },
+            error: null
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.getWishlistCtrl = async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        const wishlist = await getWishlist(userId)
+        res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { wishlist },
+            error: null
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+};
+
+exports.removeFromWishlistCtrl = async (req, res) => {
+    try {
+        const { userId, productId } = req.body;
+
+        if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Id',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        const updatedUser = await removeFromWishlist(userId, productId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { wishlist: updatedUser?.wishlist },
             error: null
         })
 
