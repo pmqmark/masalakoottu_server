@@ -95,7 +95,7 @@ const productSchema = new mongoose.Schema(
     isArchived: {
       type: Boolean,
       default: false
-  },
+    },
 
   },
   {

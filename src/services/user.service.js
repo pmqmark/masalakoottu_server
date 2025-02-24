@@ -1,3 +1,4 @@
+const { Coupon } = require("../models/coupon.model");
 const { User } = require("../models/user.model");
 const { hashPassword } = require("../utils/password.util");
 
@@ -79,7 +80,7 @@ exports.removeFromCart = async (userId, productId) => {
 exports.addToWishlist = async (userId, productId) => {
     const user = await User.findById(userId)
     let wishlist = user.wishlist;
-    
+
     wishlist.push(productId)
 
     user.wishlist = wishlist;
@@ -101,4 +102,15 @@ exports.removeFromWishlist = async (userId, productId) => {
     user.wishlist = wishlist;
 
     return await user.save();
+}
+
+
+exports.findCouponWithCode = async (code) => {
+    return await Coupon.findOne({ code });
+}
+
+exports.addUserToCouponUsersList = async (userId, couponId) => {
+    await Coupon.findByIdAndUpdate(couponId, {
+        $push: { userList: userId }
+    }, { new: true })
 }

@@ -1,61 +1,47 @@
-const { default: mongoose } = require("mongoose")
+const mongoose = require("mongoose");
 
-const OrderSchema = new mongoose.Schema({
-
-  totalAmount: {
-    type: Number,
-    required: true,
-  },
-
-  orderDate: {
-    type: Date,
-    default: Date.now,
-  },
-
-  items: [
-    {
-      productId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product',
-      },
-      quantity: {
-        type: Number,
-        required: true,
-      },
+const OrderSchema = new mongoose.Schema(
+  {
+    payMode: {
+      type: String,
+      enum: ['COD', 'Credit Card', 'UPI', 'Net Banking'],
+      required: true
     },
-  ],
 
-  
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    transactionId: { type: String },
+
+    payStatus: {
+      type: String,
+      enum: ['pending', 'success', 'failed'],
+      default: 'pending'
+    },
+
+    status: {
+      type: String,
+      enum: ['Pending', 'Shipped', 'Delivered', 'Cancelled'],
+      default: 'Pending',
+    },
+
+    amount: { type: Number, required: true },
+    orderDate: { type: Date, default: Date.now, index: true },
+    expectedDelivery: { type: Date, default: () => Date.now() + 7 * 24 * 60 * 60 * 1000 }, // 7 Days 
+    
+    items: [
+      {
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+        quantity: { type: Number, required: true },
+      },
+    ],
+
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    address: { type: mongoose.Schema.Types.ObjectId, ref: "Address", required: true },
+    
+    discount: { type: Number, default: 0 },
+    deliveryType: { type: String, enum: ['Standard', 'Express'], default: 'Standard' },
+    deliveryCharge: { type: Number, default: 0 },
+    couponId: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
   },
-  address: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Address'
-  },
-  
-  transactionId: { type: String },
-  payMode: { type: String },
+  { timestamps: true }
+);
 
-  expectedDelivery: {
-    type: Date,
-  },
-
-  discount: { type: Number },
-  deliveryType: { type: String },
-  deliveryCharge: { type: Number },
-
-  couponId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Coupon'
-  },
-
-  status: {
-    type: String,
-    enum: ['Pending', 'Shipped', 'Delivered', 'Cancelled'],
-    default: 'Pending',
-  },
-}, { timestamps: true })
-
-exports.Order = mongoose.model('Order', OrderSchema)
+module.exports = mongoose.model("Order", OrderSchema);

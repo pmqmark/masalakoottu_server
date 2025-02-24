@@ -1,9 +1,10 @@
 const { isValidObjectId } = require("mongoose");
-const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile, getUserByEmail, addToCart, removeFromCart, getCart, removeFromWishlist, getWishlist, addToWishlist } = require("../services/user.service");
+const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile, getUserByEmail, addToCart, removeFromCart, getCart, removeFromWishlist, getWishlist, addToWishlist, findCouponWithCode, addUserToCouponUserList, addUserToCouponUsersList } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
 const { genderList, roleList } = require("../config/data");
+const { Coupon } = require("../models/coupon.model");
 
 
 // Accessible to Public
@@ -623,3 +624,44 @@ exports.removeFromWishlistCtrl = async (req, res) => {
         })
     }
 }
+
+
+exports.applyCoupon = async (req, res) => {
+    const { userId, couponCode, amount } = req.body;
+
+    try {
+        const coupon = await findCouponWithCode(couponCode);
+
+        if (!coupon || coupon.expiryDate < new Date() || coupon.userList?.includes(userId)
+            || amount < coupon.minValue) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired coupon',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        let discountAmount = (coupon.value / 100) * amount;
+
+        discountAmount = Math.min(discountAmount, coupon.maxValue)
+
+        const finalAmount = amount - discountAmount;
+
+        await addUserToCouponUsersList(userId, coupon?._id)
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { discountAmount, finalAmount },
+            error: null
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+};
