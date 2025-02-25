@@ -21,6 +21,20 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0, // Percentage discount
     },
+
+    thumbnail: {
+      location: {
+        type: String,
+        required: true,
+      },
+      name: {
+        type: String,
+      },
+      key: {
+        type: String,
+      },
+    },
+
     images: [
       {
         location: {

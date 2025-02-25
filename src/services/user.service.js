@@ -1,6 +1,7 @@
-const { Coupon } = require("../models/coupon.model");
+const { Address } = require("../models/address.model");
 const { User } = require("../models/user.model");
 const { hashPassword } = require("../utils/password.util");
+const _ = require('lodash');
 
 exports.createUser = async (createObj) => {
     return await User.create(createObj)
@@ -45,37 +46,66 @@ exports.updatePassword = async (id, password) => {
     }, { new: true })
 }
 
-exports.addToCart = async (userId, productId, quantity) => {
+exports.addToCart = async (userId, productId, quantity, variations) => {
     const user = await User.findById(userId)
     let cart = user.cart;
-    const itemIndex = cart.findIndex(item => item.productId.toString() === productId);
+
+    const itemIndex = cart.findIndex(item => 
+        item.productId.toString() === productId &&
+        _.isEqual(item.variations, variations) 
+    );
 
     if (itemIndex > -1) {
         cart[itemIndex].quantity += quantity;
     } else {
-        cart.push({ productId, quantity })
+        cart.push({ productId, quantity, variations })
     }
 
     user.cart = cart;
 
-    return await user.save();
-}
-
-exports.getCart = async (userId) => {
-    const user = await User.findById(userId);
+    await user.save();
     return user.cart
 }
 
-exports.removeFromCart = async (userId, productId) => {
+exports.getCart = async (userId) => {
     const user = await User.findById(userId)
+    .populate('cart.productId', 'name price thumbnail variations');
+
+    const cart = user?.cart?.map(item=>(
+        {
+            productId: item?.productId?._id,
+            quantity: item?.quantity,
+
+            name: item?.productId?.name,
+            price: item?.productId?.price,
+            thumbnail: item?.productId?.thumbnail,
+        }
+    ))
+    
+    return cart
+}
+
+exports.removeFromCart = async (userId, productId, variations) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
     let cart = user.cart;
 
-    cart = cart.filter(item => item.productId.toString() !== productId)
+    const itemIndex = cart.findIndex(item =>
+        item.productId.toString() === productId &&
+        _.isEqual(item.variations, variations) 
+    );
+
+    if (itemIndex > -1) {
+        cart.splice(itemIndex, 1); 
+    } else {
+        throw new Error("Item not found in cart");
+    }
 
     user.cart = cart;
-
-    return await user.save();
-}
+    await user.save();
+    return user.cart;
+};
 
 exports.addToWishlist = async (userId, productId) => {
     const user = await User.findById(userId)
@@ -104,13 +134,12 @@ exports.removeFromWishlist = async (userId, productId) => {
     return await user.save();
 }
 
-
-exports.findCouponWithCode = async (code) => {
-    return await Coupon.findOne({ code });
+exports.fetchUserAddresses = async(userId)=>{
+    const user = await User.findById(userId)
+    return await Address.find({_id:{$in: user?.addresses}})
 }
 
-exports.addUserToCouponUsersList = async (userId, couponId) => {
-    await Coupon.findByIdAndUpdate(couponId, {
-        $push: { userList: userId }
-    }, { new: true })
+
+exports.fetchSingleAddress = async(id)=>{
+    return await Address.findById(id)
 }

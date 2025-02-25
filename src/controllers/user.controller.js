@@ -4,8 +4,6 @@ const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
 const { genderList, roleList } = require("../config/data");
-const { Coupon } = require("../models/coupon.model");
-
 
 // Accessible to Public
 exports.registerUserCtrl = async (req, res) => {
@@ -452,7 +450,7 @@ exports.getManyUsersCtrl = async (req, res, next) => {
 
 exports.addToCartCtrl = async (req, res) => {
     try {
-        const { userId, productId, quantity } = req.body;
+        const { userId, productId, quantity, variations } = req.body;
 
         if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
             return res.status(400).json({
@@ -463,12 +461,12 @@ exports.addToCartCtrl = async (req, res) => {
             })
         }
 
-        const updatedUser = await addToCart(userId, productId, quantity);
+        const cart = await addToCart(userId, productId, quantity, variations);
 
         return res.status(200).json({
             success: true,
             message: 'success',
-            data: { cart: updatedUser?.cart },
+            data: { cart },
             error: null
         })
 
@@ -506,7 +504,7 @@ exports.getCartCtrl = async (req, res) => {
 
 exports.removeFromCartCtrl = async (req, res) => {
     try {
-        const { userId, productId } = req.body;
+        const { userId, productId , variations} = req.body;
 
         if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
             return res.status(400).json({
@@ -517,12 +515,12 @@ exports.removeFromCartCtrl = async (req, res) => {
             })
         }
 
-        const updatedUser = await removeFromCart(userId, productId);
+        const cart = await removeFromCart(userId, productId, variations);
 
         return res.status(200).json({
             success: true,
             message: 'success',
-            data: { cart: updatedUser?.cart },
+            data: { cart },
             error: null
         })
 
@@ -625,38 +623,31 @@ exports.removeFromWishlistCtrl = async (req, res) => {
     }
 }
 
-
-exports.applyCoupon = async (req, res) => {
-    const { userId, couponCode, amount } = req.body;
-
+exports.getUserAddresssesCtrl = async (req, res) => {
     try {
-        const coupon = await findCouponWithCode(couponCode);
+        const userId  = req.user.userId;
 
-        if (!coupon || coupon.expiryDate < new Date() || coupon.userList?.includes(userId)
-            || amount < coupon.minValue) {
-            return res.status(400).json({
+        const user = await getUserById(userId);
+
+        if (!user) {
+            return res.status(404).json({
                 success: false,
-                message: 'Invalid or expired coupon',
+                message: 'Not Found',
                 data: null,
-                error: 'BAD_REQUEST'
+                error: 'NOT_FOUND'
             })
         }
 
-        let discountAmount = (coupon.value / 100) * amount;
-
-        discountAmount = Math.min(discountAmount, coupon.maxValue)
-
-        const finalAmount = amount - discountAmount;
-
-        await addUserToCouponUsersList(userId, coupon?._id)
+        const addresses = await fetchUserAddresses(userId)
 
         return res.status(200).json({
             success: true,
-            message: 'success',
-            data: { discountAmount, finalAmount },
-            error: null
+            message: "success",
+            data: { addresses },
+            error: null,
         })
     } catch (error) {
+        console.log(error);
         res.status(500).json({
             success: false,
             message: "Internal Server error",
@@ -664,4 +655,8 @@ exports.applyCoupon = async (req, res) => {
             error: 'INTERNAL_SERVER_ERROR'
         })
     }
-};
+}
+
+
+
+

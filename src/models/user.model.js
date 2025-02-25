@@ -56,6 +56,16 @@ const UserSchema = new mongoose.Schema({
                 type: Number,
                 default: 1,
             },
+
+            variations: [
+                {
+                    name: { type: String },
+                    option: {
+                        value: { type: String },
+                        additionalPrice: { type: Number, default: 0 }
+                    }
+                }
+            ]
         },
     ],
 

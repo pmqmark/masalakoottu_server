@@ -1,4 +1,4 @@
-const { createUserCtrl, updateUserCtrl, updateUserStatusCtrl, getManyUsersCtrl, getUserByIdCtrl, getUserProfileByIdCtrl, registerUserCtrl, addToCartCtrl, getCartCtrl, removeFromCartCtrl, addToWishlistCtrl, getWishlistCtrl, removeFromWishlistCtrl } = require("../controllers/user.controller");
+const { createUserCtrl, updateUserCtrl, updateUserStatusCtrl, getManyUsersCtrl, getUserByIdCtrl, getUserProfileByIdCtrl, registerUserCtrl, addToCartCtrl, getCartCtrl, removeFromCartCtrl, addToWishlistCtrl, getWishlistCtrl, removeFromWishlistCtrl, getUserAddresssesCtrl } = require("../controllers/user.controller");
 const { authMiddleware } = require("../middlewares/auth.middleware");
 const { roleChecker } = require("../middlewares/roleChecker.middleware");
 
@@ -15,6 +15,8 @@ userRouter.post("/carts/remove", removeFromCartCtrl);
 userRouter.post('/register', registerUserCtrl)
 
 userRouter.use(authMiddleware)
+
+userRouter.get('/addresses', roleChecker(['user']), getUserAddresssesCtrl)
 
 userRouter.get('/profile/:id', roleChecker(['user']), getUserProfileByIdCtrl)
 userRouter.put('/:id', updateUserCtrl)
