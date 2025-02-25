@@ -66,7 +66,7 @@ const OrderSchema = new mongoose.Schema(
     discount: { type: Number, default: 0 },
     deliveryType: { type: String, enum: ['Standard', 'Express'], default: 'Standard' },
     deliveryCharge: { type: Number, default: 0 },
-    coupon: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
+    couponId: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
   },
   { timestamps: true }
 );

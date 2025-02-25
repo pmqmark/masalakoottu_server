@@ -23,3 +23,14 @@ exports.updateProductStatus = async (id, isArchived) => {
         $set: { isArchived }
     }, { new: true })
 }
+
+exports.decrementProductQty = async(cart)=>{
+    const productUpdates = cart?.map((item)=>{
+        const productId = item?.productId;
+        const quantity = item?.quantity;
+
+        return Product.findByIdAndUpdate(productId, {$inc: {stock: -quantity}})
+    })
+
+    await Promise.all(productUpdates);
+}

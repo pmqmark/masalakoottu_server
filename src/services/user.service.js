@@ -50,9 +50,9 @@ exports.addToCart = async (userId, productId, quantity, variations) => {
     const user = await User.findById(userId)
     let cart = user.cart;
 
-    const itemIndex = cart.findIndex(item => 
+    const itemIndex = cart.findIndex(item =>
         item.productId.toString() === productId &&
-        _.isEqual(item.variations, variations) 
+        _.isEqual(item.variations, variations)
     );
 
     if (itemIndex > -1) {
@@ -69,19 +69,20 @@ exports.addToCart = async (userId, productId, quantity, variations) => {
 
 exports.getCart = async (userId) => {
     const user = await User.findById(userId)
-    .populate('cart.productId', 'name price thumbnail variations');
+        .populate('cart.productId', 'name price thumbnail');
 
-    const cart = user?.cart?.map(item=>(
+    const cart = user?.cart?.map(item => (
         {
             productId: item?.productId?._id,
             quantity: item?.quantity,
+            variations: item?.variations,
 
             name: item?.productId?.name,
             price: item?.productId?.price,
             thumbnail: item?.productId?.thumbnail,
         }
     ))
-    
+
     return cart
 }
 
@@ -93,11 +94,11 @@ exports.removeFromCart = async (userId, productId, variations) => {
 
     const itemIndex = cart.findIndex(item =>
         item.productId.toString() === productId &&
-        _.isEqual(item.variations, variations) 
+        _.isEqual(item.variations, variations)
     );
 
     if (itemIndex > -1) {
-        cart.splice(itemIndex, 1); 
+        cart.splice(itemIndex, 1);
     } else {
         throw new Error("Item not found in cart");
     }
@@ -134,12 +135,12 @@ exports.removeFromWishlist = async (userId, productId) => {
     return await user.save();
 }
 
-exports.fetchUserAddresses = async(userId)=>{
+exports.fetchUserAddresses = async (userId) => {
     const user = await User.findById(userId)
-    return await Address.find({_id:{$in: user?.addresses}})
+    return await Address.find({ _id: { $in: user?.addresses } })
 }
 
 
-exports.fetchSingleAddress = async(id)=>{
+exports.fetchSingleAddress = async (id) => {
     return await Address.findById(id)
 }
