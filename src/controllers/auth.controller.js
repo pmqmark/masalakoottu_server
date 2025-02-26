@@ -72,9 +72,9 @@ exports.userLogin = async (req, res) => {
             })
         };
 
-        const accessToken = generateAccessToken({ userId: user._id, role: user.role })
+        const accessToken = generateAccessToken({ userId: String(user._id), role: user.role })
 
-        const refreshToken = generateRefreshToken({ userId: user._id, role: user.role })
+        const refreshToken = generateRefreshToken({ userId: String(user._id), role: user.role })
 
         const { password:pwd, credType:ctype, ...userInfo } = user;
 
@@ -172,8 +172,8 @@ exports.googleHandler = async (req, res) => {
             user = newUser.toObject();
         }
 
-        const accessToken = generateAccessToken({ userId: user._id, role: user.role })
-        const refreshToken = generateRefreshToken({ userId: user._id, role: user.role })
+        const accessToken = generateAccessToken({ userId: String(user._id), role: user.role })
+        const refreshToken = generateRefreshToken({ userId: String(user._id), role: user.role })
 
         const { password, ...userInfo } = user
 

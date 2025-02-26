@@ -140,7 +140,7 @@ exports.getUserProfileByIdCtrl = async (req, res, next) => {
             })
         }
 
-        const userId = String(req.user.userId);
+        const { userId } = req.user;
 
         if (id !== userId) {
             return res.status(401).json({
@@ -504,7 +504,7 @@ exports.getCartCtrl = async (req, res) => {
 
 exports.removeFromCartCtrl = async (req, res) => {
     try {
-        const { userId, productId , variations} = req.body;
+        const { userId, productId, variations } = req.body;
 
         if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
             return res.status(400).json({
@@ -625,7 +625,7 @@ exports.removeFromWishlistCtrl = async (req, res) => {
 
 exports.getUserAddresssesCtrl = async (req, res) => {
     try {
-        const userId  = req.user.userId;
+        const userId = req.user.userId;
 
         const user = await getUserById(userId);
 

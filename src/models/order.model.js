@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
+const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
 
 const OrderSchema = new mongoose.Schema(
   {
     payMode: {
       type: String,
-      enum: ['COD', 'Credit Card', 'UPI', 'Net Banking'],
+      enum: payModeList,
       required: true
     },
 
@@ -12,13 +13,13 @@ const OrderSchema = new mongoose.Schema(
 
     payStatus: {
       type: String,
-      enum: ['pending', 'success', 'failed'],
+      enum: payStatusList,
       default: 'pending'
     },
 
     status: {
       type: String,
-      enum: ['pending', 'shipped', 'delivered', 'cancelled', 'returned'],
+      enum: orderStatusList,
       default: 'pending',
     },
 
@@ -64,7 +65,7 @@ const OrderSchema = new mongoose.Schema(
     shipAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address", required: true },
 
     discount: { type: Number, default: 0 },
-    deliveryType: { type: String, enum: ['Standard', 'Express'], default: 'Standard' },
+    deliveryType: { type: String, enum: deliveryTypeList, default: 'Standard' },
     deliveryCharge: { type: Number, default: 0 },
     couponId: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
   },

@@ -1,3 +1,4 @@
+const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
 const { findCouponWithCode, addUserToCouponUsersList } = require("../services/coupon.service");
 const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI, updateOrder, findManyOrders, getOrderById, cancelMyOrder, returnMyOrder } = require("../services/order.service");
 const { decrementProductQty } = require("../services/product.service");
@@ -258,13 +259,28 @@ exports.getMyOrdersCtrl = async (req, res) => {
 
 exports.getManyOrdersCtrl = async (req, res) => {
     try {
+        const { payMode, payStatus, status, deliveryType } = req.query;
         const filters = {}
+
+        if (payModeList?.includes(payMode)) {
+            filters.payMode = payMode;
+        }
+        if (payStatusList?.includes(payStatus)) {
+            filters.payStatus = payStatus;
+        }
+        if (orderStatusList?.includes(status)) {
+            filters.status = status;
+        }
+        if (deliveryTypeList?.includes(deliveryType)) {
+            filters.deliveryType = deliveryType;
+        }
+
         const orders = await findManyOrders(filters)
 
         res.status(200).json({
             success: true,
             message: "success",
-            data: { orders: orders },
+            data: { orders },
             error: null,
         })
     } catch (error) {
