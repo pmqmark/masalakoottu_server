@@ -1,6 +1,6 @@
 const { verifyAccessToken } = require("../utils/jwt.util");
 
-exports.authMiddleware = async (req, res, next) => {
+exports.authMiddleware = (req, res, next) => {
 
     try {
         const authHeader = req?.headers?.authorization || req?.headers?.Authorization;

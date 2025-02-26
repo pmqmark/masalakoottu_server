@@ -1,5 +1,4 @@
 const { default: axios } = require("axios");
-const { Coupon } = require("../models/coupon.model");
 const { Order } = require("../models/order.model");
 const { User } = require("../models/user.model");
 
@@ -11,15 +10,6 @@ const NODE_ENV = process.env.NODE_ENV;
 const DEV_BASE_URL_PHONEPE = process.env.DEV_BASE_URL_PHONEPE;
 const PROD_BASE_URL_PHONEPE = process.env.PROD_BASE_URL_PHONEPE;
 
-exports.findCouponWithCode = async (code) => {
-    return await Coupon.findOne({ code });
-}
-
-exports.addUserToCouponUsersList = async (userId, couponId) => {
-    return await Coupon.findByIdAndUpdate(couponId, {
-        $push: { userList: userId }
-    }, { new: true })
-}
 
 exports.saveOrder = async (obj) => {
     return await Order.create(obj);
@@ -29,10 +19,6 @@ exports.clearCart = async (userId) => {
     return await User.findByIdAndUpdate(userId, {
         $set: { cart: [] }
     }, { new: true })
-}
-
-exports.getOrderByTxnId = async (transactionId) => {
-    return await Order.findOne({ transactionId }).lean()
 }
 
 exports.onlinePayment = async (transactionId, user, amount) => {
@@ -52,9 +38,9 @@ exports.onlinePayment = async (transactionId, user, amount) => {
         merchantTransactionId: transactionId,
         merchantUserId: merchantUserId,
         amount: phonePeObj.amount * 100,
-        redirectUrl: `${ServerURL}/status/${transactionId}`,
+        redirectUrl: `${ServerURL}/orders/check-pay-status/${transactionId}`,
         redirectMode: 'POST',
-        callbackUrl: `${ServerURL}/status/${transactionId}`,
+        callbackUrl: `${ServerURL}/orders/check-pay-status/${transactionId}`,
         mobileNumber: phonePeObj.number,
         paymentInstrument: {
             type: 'PAY_PAGE'
@@ -122,10 +108,28 @@ exports.updateOrder = async (id, updateObj) => {
     }, { new: true })
 }
 
-exports.findAnOrder = async (id) => {
-    return await Order.findById(id)
+exports.getOrderByTxnId = async (transactionId) => {
+    return await Order.findOne({ transactionId }).lean()
 }
+
+exports.getOrderById = async (id) => {
+    return await Order.findById(id).lean()
+}
+
 
 exports.findManyOrders = async (filters) => {
     return await Order.find(filters)
+}
+
+
+exports.cancelMyOrder = async (orderId) => {
+    return await Order.findByIdAndUpdate(orderId, {
+        $set: { status: 'cancelled' }
+    }, { new: true })
+}
+
+exports.returnMyOrder = async (orderId) => {
+    return await Order.findByIdAndUpdate(orderId, {
+        $set: { status: 'returned' }
+    }, { new: true })
 }
