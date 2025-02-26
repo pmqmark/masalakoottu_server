@@ -10,7 +10,7 @@ couponRouter.post("/calculate", calculateCouponCtrl);
 couponRouter.get("/available", roleChecker(['user']), fetchAvailableCouponsCtrl);
 
 couponRouter.get("/all", roleChecker(['admin']), fetchAllCouponsCtrl);
-couponRouter.get("/:id", roleChecker(['user']), fetchCouponByIdCtrl );
+couponRouter.get("/:id", fetchCouponByIdCtrl );
 
 couponRouter.use(roleChecker(['admin']))
 couponRouter.post("", createCouponCtrl);
