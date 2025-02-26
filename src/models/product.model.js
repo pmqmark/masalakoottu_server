@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+const { default: mongoose, Schema, model } = require('mongoose');
 
-const productSchema = new mongoose.Schema(
+const productSchema = new Schema(
   {
     name: {
       type: String,
@@ -58,7 +58,7 @@ const productSchema = new mongoose.Schema(
     reviews: [
       {
         userId: {
-          type: mongoose.Schema.Types.ObjectId,
+          type: Schema.Types.ObjectId,
           ref: 'User',
         },
         rating: {
@@ -78,14 +78,10 @@ const productSchema = new mongoose.Schema(
 
     variations: [
       {
-        name: {
-          type: String, // e.g., 'Color', 'Size'
-        },
+        variationId: { type: Schema.Types.ObjectId, ref: 'Variation' }, // e.g., 'Color'
         options: [
           {
-            value: {
-              type: String, // e.g., 'Red', 'Medium'
-            },
+            optionId: { type: Schema.Types.ObjectId, ref: 'Option' },// e.g., 'Red', 'Green'
             additionalPrice: {
               type: Number,
               default: 0,
@@ -117,4 +113,4 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-exports.Product = mongoose.model('Product', productSchema);
+exports.Product = model('Product', productSchema);

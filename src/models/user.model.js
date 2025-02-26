@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
+const { default: mongoose, Schema, model } = require('mongoose');
 const { credTypeList, genderList, roleList } = require('../config/data');
 
-const UserSchema = new mongoose.Schema({
+const UserSchema = new Schema({
     credType: {
         type: String,
         enum: credTypeList,
@@ -37,11 +37,11 @@ const UserSchema = new mongoose.Schema({
     password: {
         type: String,
     },
-    addresses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Address' }],
+    addresses: [{ type: Schema.Types.ObjectId, ref: 'Address' }],
 
     wishlist: [
         {
-            type: mongoose.Schema.Types.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: 'Product',
         },
     ],
@@ -49,7 +49,7 @@ const UserSchema = new mongoose.Schema({
     cart: [
         {
             productId: {
-                type: mongoose.Schema.Types.ObjectId,
+                type: Schema.Types.ObjectId,
                 ref: 'Product',
             },
             quantity: {
@@ -59,17 +59,15 @@ const UserSchema = new mongoose.Schema({
 
             variations: [
                 {
-                    name: { type: String },
-                    option: {
-                        value: { type: String },
-                        additionalPrice: { type: Number, default: 0 }
-                    }
+                    variationId: { type: Schema.Types.ObjectId, ref: 'Variation' }, // e.g., 'Color', 'Size'
+                    optionId: { type: Schema.Types.ObjectId, ref: 'Option' },
+                    additionalPrice: { type: Number, default: 0 }
                 }
             ]
         },
     ],
 
-    orderHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
+    orderHistory: [{ type: Schema.Types.ObjectId, ref: 'Order' }],
 
     role: { type: String, default: 'user', enum: roleList },
 
@@ -77,4 +75,4 @@ const UserSchema = new mongoose.Schema({
 
 }, { timestamps: true })
 
-exports.User = mongoose.model('User', UserSchema)
+exports.User = model('User', UserSchema)

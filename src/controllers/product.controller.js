@@ -1,5 +1,5 @@
 const { isValidObjectId } = require("mongoose");
-const { createProduct, updateProduct, updateProductStatus, getProductById, getManyProducts } = require("../services/product.service");
+const { createProduct, updateProduct, updateProductStatus, getProductById, getManyProducts, createVariation, updateVariation, getOneVariation, deleteVariation, getManyVariation, createOption, getOneOption, getManyOption, updateOption, deleteOption } = require("../services/product.service");
 
 exports.createProductCtrl = async (req, res) => {
     try {
@@ -252,6 +252,327 @@ exports.getAllProductsCtrl = async (req, res, next) => {
             error: null
         })
 
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.createVariationCtrl = async (req, res) => {
+    try {
+        const { name, options=[] } = req.body;
+        if (!name?.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Data',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        const variation = await createVariation({ name, options })
+
+        if (!variation) {
+            return res.status(400).json({
+                success: false,
+                message: 'failed',
+                data: null,
+                error: 'FAILED'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { variation },
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.getOneVariationCtrl = async (req, res) => {
+    try {
+        const { variationId } = req.params;
+
+        const variation = await getOneVariation(variationId)
+
+        if (!variation) {
+            return res.status(400).json({
+                success: false,
+                message: 'failed',
+                data: null,
+                error: 'FAILED'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { variation },
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.getManyVariationCtrl = async (req, res) => {
+    try {
+        const filters = {}
+
+        const variations = await getManyVariation(filters)
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { variations },
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.updateVariationCtrl = async (req, res) => {
+    try {
+        const { variationId } = req.params;
+        const { name, options } = req.body;
+
+        const variation = await updateVariation(variationId, { name, options })
+
+        if (!variation) {
+            return res.status(400).json({
+                success: false,
+                message: 'failed',
+                data: null,
+                error: 'FAILED'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { variation },
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.deleteVariationCtrl = async (req, res) => {
+    try {
+        const { variationId } = req.params;
+
+        const variation = await deleteVariation(variationId)
+
+        if (!variation) {
+            return res.status(400).json({
+                success: false,
+                message: 'failed',
+                data: null,
+                error: 'FAILED'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: null,
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+
+exports.createOptionCtrl = async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name?.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Data',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        const option = await createOption({ name })
+
+        if (!option) {
+            return res.status(400).json({
+                success: false,
+                message: 'failed',
+                data: null,
+                error: 'FAILED'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { option },
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.getOneOptionCtrl = async (req, res) => {
+    try {
+        const { optionId } = req.params;
+
+        const option = await getOneOption(optionId)
+
+        if (!option) {
+            return res.status(400).json({
+                success: false,
+                message: 'failed',
+                data: null,
+                error: 'FAILED'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { option },
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.getManyOptionCtrl = async (req, res) => {
+    try {
+        const filters = {}
+
+        const options = await getManyOption(filters)
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { options },
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.updateOptionCtrl = async (req, res) => {
+    try {
+        const { optionId } = req.params;
+        const { name } = req.body;
+
+        const option = await updateOption(optionId, { name })
+
+        if (!option) {
+            return res.status(400).json({
+                success: false,
+                message: 'failed',
+                data: null,
+                error: 'FAILED'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { option },
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.deleteOptionCtrl = async (req, res) => {
+    try {
+        const { optionId } = req.params;
+
+        const option = await deleteOption(optionId)
+
+        if (!option) {
+            return res.status(400).json({
+                success: false,
+                message: 'failed',
+                data: null,
+                error: 'FAILED'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: null,
+            error: null
+        })
     } catch (error) {
         console.error(error)
         res.status(500).json({

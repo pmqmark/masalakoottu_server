@@ -3,6 +3,17 @@ const { User } = require("../models/user.model");
 const { hashPassword } = require("../utils/password.util");
 const _ = require('lodash');
 
+const normalizeVariations = (variations) => {
+    return variations
+        .map(v => ({
+            variationId: v.variationId.toString(),
+            optionId: v.optionId.toString(),
+            additionalPrice: v.additionalPrice
+        }))
+        .sort((a, b) => a.variationId.localeCompare(b.variationId));
+};
+
+
 exports.createUser = async (createObj) => {
     return await User.create(createObj)
 }
@@ -52,7 +63,7 @@ exports.addToCart = async (userId, productId, quantity, variations) => {
 
     const itemIndex = cart.findIndex(item =>
         item.productId.toString() === productId &&
-        _.isEqual(item.variations, variations)
+        _.isEqual(normalizeVariations(item.variations), normalizeVariations(variations))
     );
 
     if (itemIndex > -1) {
@@ -69,22 +80,36 @@ exports.addToCart = async (userId, productId, quantity, variations) => {
 
 exports.getCart = async (userId) => {
     const user = await User.findById(userId)
-        .populate('cart.productId', 'name price thumbnail');
+        .populate('cart.productId', 'name price thumbnail')
+        .populate('cart.variations.variationId', 'name')
+        .populate('cart.variations.optionId', 'value')
+        .lean();
 
-    const cart = user?.cart?.map(item => (
-        {
-            productId: item?.productId?._id,
-            quantity: item?.quantity,
-            variations: item?.variations,
+    if (!user || !user.cart) return [];
 
-            name: item?.productId?.name,
-            price: item?.productId?.price,
-            thumbnail: item?.productId?.thumbnail,
-        }
-    ))
+    const cart = user.cart.map(item => {
+        const product = item?.productId || {};
+        
+        const obj = {
+            productId: product._id || null,
+            quantity: item?.quantity || 1, 
+            name: product.name || "Unknown Product",
+            price: product.price || 0,
+            thumbnail: product.thumbnail || null,
+        };
 
-    return cart
-}
+        obj.variations = (item.variations || []).map(elem => ({
+            name: elem?.variationId?.name || "Unknown Variation",
+            value: elem?.optionId?.value || "Unknown Option",
+            additionalPrice: elem?.additionalPrice || 0
+        }));
+
+        return obj;
+    });
+
+    return cart;
+};
+
 
 exports.removeFromCart = async (userId, productId, variations) => {
     const user = await User.findById(userId);
@@ -94,7 +119,7 @@ exports.removeFromCart = async (userId, productId, variations) => {
 
     const itemIndex = cart.findIndex(item =>
         item.productId.toString() === productId &&
-        _.isEqual(item.variations, variations)
+        _.isEqual(normalizeVariations(item.variations), normalizeVariations(variations))
     );
 
     if (itemIndex > -1) {

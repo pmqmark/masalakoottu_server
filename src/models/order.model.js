@@ -51,10 +51,8 @@ const OrderSchema = new mongoose.Schema(
         variations: [
           {
             name: { type: String },
-            option: {
-              value: { type: String },
-              additionalPrice: { type: Number, default: 0 }
-            }
+            value: { type: String },
+            additionalPrice: { type: Number, default: 0 }
           }
         ]
       },
