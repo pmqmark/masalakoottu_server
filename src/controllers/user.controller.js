@@ -1,5 +1,8 @@
 const { isValidObjectId } = require("mongoose");
-const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile, getUserByEmail, addToCart, removeFromCart, getCart, removeFromWishlist, getWishlist, addToWishlist, findCouponWithCode, addUserToCouponUserList, addUserToCouponUsersList } = require("../services/user.service");
+const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile,
+    getUserByEmail, addToCart, removeFromCart, getCart, removeFromWishlist, getWishlist,
+    addToWishlist, createAddress, updateAddress, deleteAddress, fetchManyAddress,
+    fetchSingleAddress } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
@@ -638,12 +641,143 @@ exports.getUserAddresssesCtrl = async (req, res) => {
             })
         }
 
-        const addresses = await fetchUserAddresses(userId)
+        const filters = { _id: { $in: user?.addresses } }
+
+        const addresses = await fetchManyAddress(filters)
 
         return res.status(200).json({
             success: true,
             message: "success",
             data: { addresses },
+            error: null,
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.getAllAddresssesCtrl = async (req, res) => {
+    try {
+        const filters = {}
+
+        const addresses = await fetchManyAddress(filters)
+
+        return res.status(200).json({
+            success: true,
+            message: "success",
+            data: { addresses },
+            error: null,
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.getOneAddressCtrl = async (req, res) => {
+    try {
+        const { addressId } = req.params;
+
+        const address = await fetchSingleAddress(addressId)
+
+        if (!address) {
+            return res.status(404).json({
+                success: false,
+                message: 'Not Found',
+                data: null,
+                error: "NOT_FOUND"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "success",
+            data: { address },
+            error: null,
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.postAddresssesCtrl = async (req, res) => {
+    try {
+        const createObj = req.body;
+
+        const address = await createAddress(createObj)
+
+        return res.status(200).json({
+            success: true,
+            message: "success",
+            data: { address },
+            error: null,
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.updateAddresssesCtrl = async (req, res) => {
+    try {
+        const { addressId } = req.params;
+        const updateObj = req.body;
+
+        const address = await updateAddress(addressId, updateObj)
+
+        return res.status(200).json({
+            success: true,
+            message: "success",
+            data: { address },
+            error: null,
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.deleteAddresssesCtrl = async (req, res) => {
+    try {
+        const { addressId } = req.params;
+
+        const address = await deleteAddress(addressId)
+
+        if (!address) {
+            throw new Error('Failed')
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "success",
+            data: null,
             error: null,
         })
     } catch (error) {

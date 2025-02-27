@@ -3,6 +3,8 @@ const { authMiddleware } = require("../middlewares/auth.middleware");
 const { roleChecker } = require("../middlewares/roleChecker.middleware");
 const productValidator = require("../validators/product.validator");
 const { validate } = require("../middlewares/validate.middleware");
+const { validateCreateOption, validateUpdateOption } = require("../validators/option.validator");
+const { validateCreateVariation, validateUpdateVariation } = require("../validators/variation.validator");
 
 const productRouter = require("express").Router();
 
@@ -21,12 +23,12 @@ productRouter.get('/:id', getProductByIdCtrl)
 
 productRouter.use(roleChecker(['admin']))
 
-productRouter.post('/options', createOptionCtrl)
-productRouter.put('/options/:optionId', updateOptionCtrl)
+productRouter.post('/options', validateCreateOption, validate, createOptionCtrl)
+productRouter.put('/options/:optionId', validateUpdateOption, validate, updateOptionCtrl)
 productRouter.delete('/options/:optionId', deleteOptionCtrl)
 
-productRouter.post('/variations', createVariationCtrl)
-productRouter.put('/variations/:variationId', updateVariationCtrl)
+productRouter.post('/variations', validateCreateVariation, validate, createVariationCtrl)
+productRouter.put('/variations/:variationId', validateUpdateVariation, validate, updateVariationCtrl)
 productRouter.delete('/variations/:variationId', deleteVariationCtrl)
 
 productRouter.post('', productValidator.create, validate, createProductCtrl)

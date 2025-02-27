@@ -89,10 +89,10 @@ exports.getCart = async (userId) => {
 
     const cart = user.cart.map(item => {
         const product = item?.productId || {};
-        
+
         const obj = {
             productId: product._id || null,
-            quantity: item?.quantity || 1, 
+            quantity: item?.quantity || 1,
             name: product.name || "Unknown Product",
             price: product.price || 0,
             thumbnail: product.thumbnail || null,
@@ -160,12 +160,25 @@ exports.removeFromWishlist = async (userId, productId) => {
     return await user.save();
 }
 
-exports.fetchUserAddresses = async (userId) => {
-    const user = await User.findById(userId)
-    return await Address.find({ _id: { $in: user?.addresses } })
+exports.fetchManyAddress = async (filters) => {
+    return await Address.find(filters)
 }
 
 
 exports.fetchSingleAddress = async (id) => {
     return await Address.findById(id)
+}
+
+exports.createAddress = async (obj) => {
+    return await Address.create(obj)
+}
+
+exports.updateAddress = async (id, obj) => {
+    return await Address.findByIdAndUpdate(id, {
+        $set: obj
+    }, { new: true })
+}
+
+exports.deleteAddress = async (id) => {
+    return await Address.findByIdAndDelete(id)
 }

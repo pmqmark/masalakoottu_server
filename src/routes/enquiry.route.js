@@ -2,10 +2,11 @@ const { postEnquiryCtrl, getManyEnquiryCtrl, getEnquiryByIdCtrl, deleteEnquiryCt
 const { authMiddleware } = require("../middlewares/auth.middleware");
 const { roleChecker } = require("../middlewares/roleChecker.middleware");
 const { validate } = require("../middlewares/validate.middleware");
+const { validatePostEnquiry } = require("../validators/enquiry.validator");
 
 const enquiryRouter = require("express").Router();
 
-enquiryRouter.post('', postEnquiryCtrl)
+enquiryRouter.post('', validatePostEnquiry, validate, postEnquiryCtrl)
 
 enquiryRouter.use(authMiddleware)
 enquiryRouter.use(roleChecker(['admin']))
