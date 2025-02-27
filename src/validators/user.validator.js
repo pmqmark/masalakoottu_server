@@ -28,11 +28,11 @@ const userValidator = {
       .isMobilePhone()
       .withMessage("Invalid mobile number."),
     body("password")
-      .if(body("credType").equals("email"))
+      .optional()
       .notEmpty()
-      .withMessage("Password is required for email-based signup.")
       .isLength({ min: 6 })
       .withMessage("Password must be at least 6 characters long."),
+      
     body("addresses").optional().isArray(),
     body("addresses.*").optional().isMongoId().withMessage("Invalid address ID."),
     body("wishlist").optional().isArray(),
@@ -128,4 +128,4 @@ const userValidator = {
   ],
 };
 
-module.exports = {userValidator};
+module.exports = { userValidator };
