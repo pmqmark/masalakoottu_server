@@ -25,7 +25,6 @@ const productSchema = new Schema(
     thumbnail: {
       location: {
         type: String,
-        required: true,
       },
       name: {
         type: String,

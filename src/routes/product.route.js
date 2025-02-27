@@ -1,7 +1,8 @@
 const { createProductCtrl, updateProductCtrl, updateProductStatusCtrl, getProductByIdCtrl, getManyProductsCtrl, getAllProductsCtrl, createVariationCtrl, updateVariationCtrl, deleteVariationCtrl, getOneVariationCtrl, createOptionCtrl, updateOptionCtrl, deleteOptionCtrl, getManyVariationCtrl, getManyOptionCtrl, getOneOptionCtrl } = require("../controllers/product.controller");
 const { authMiddleware } = require("../middlewares/auth.middleware");
 const { roleChecker } = require("../middlewares/roleChecker.middleware");
-const validateProduct = require("../validators/product.validator");
+const productValidator = require("../validators/product.validator");
+const { validate } = require("../middlewares/validate.middleware");
 
 const productRouter = require("express").Router();
 
@@ -28,8 +29,8 @@ productRouter.post('/variations', createVariationCtrl)
 productRouter.put('/variations/:variationId', updateVariationCtrl)
 productRouter.delete('/variations/:variationId', deleteVariationCtrl)
 
-productRouter.post('', validateProduct, createProductCtrl)
-productRouter.put('/:id', validateProduct, updateProductCtrl)
+productRouter.post('', productValidator.create, validate, createProductCtrl)
+productRouter.put('/:id', productValidator.update, validate, updateProductCtrl)
 productRouter.patch('/:id', updateProductStatusCtrl)
 
 module.exports = { productRouter }

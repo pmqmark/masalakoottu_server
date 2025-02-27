@@ -1,91 +1,94 @@
-const { body, validationResult } = require('express-validator');
+const { body } = require("express-validator");
 
-const validateProduct = [
-    body('name')
-        .trim()
-        .notEmpty()
-        .withMessage('Product name is required')
-        .isLength({ min: 3, max: 100 })
-        .withMessage('Product name must be between 3 and 100 characters'),
+const productValidator = {
+  create: [
+    body("name").trim().notEmpty().withMessage("Product name is required."),
+    body("description").optional().isString(),
+    body("brand").optional().isString(),
+    body("price")
+      .notEmpty().withMessage("Price is required.")
+      .isFloat({ gt: 0 }).withMessage("Price must be greater than 0."),
+    body("discount")
+      .optional()
+      .isFloat({ min: 0, max: 100 })
+      .withMessage("Discount must be between 0 and 100."),
+    body("thumbnail").optional(),
+    body("thumbnail.location").optional().notEmpty().withMessage("Thumbnail location is required."),
+    body("thumbnail.name").optional().isString(),
+    body("thumbnail.key").optional().isString(),
+    body("images").isArray().optional(),
+    body("images.*.location").optional().notEmpty().withMessage("Each image must have a location."),
+    body("images.*.name").optional().isString(),
+    body("images.*.key").optional().isString(),
+    body("stock")
+      .optional()
+      .isInt({ min: 0 })
+      .withMessage("Stock must be a non-negative integer."),
+    body("reviews").optional().isArray(),
+    body("reviews.*.userId").optional().isMongoId(),
+    body("reviews.*.rating")
+      .optional()
+      .isInt({ min: 1, max: 5 })
+      .withMessage("Rating must be between 1 and 5."),
+    body("reviews.*.comment").optional().isString(),
+    body("variations").optional().isArray(),
+    body("variations.*.variationId").optional().isMongoId(),
+    body("variations.*.options").optional().isArray(),
+    body("variations.*.options.*.optionId").optional().isMongoId(),
+    body("variations.*.options.*.additionalPrice")
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage("Additional price must be at least 0."),
+    body("isFeatured").optional().isBoolean(),
+    body("tags").optional().isArray(),
+    body("tags.*").optional().isString(),
+    body("isArchived").optional().isBoolean(),
+  ],
 
-    body('description')
-        .optional()
-        .isLength({ max: 1000 })
-        .withMessage('Description cannot exceed 1000 characters'),
+  update: [
+    body("name").optional().trim().notEmpty().withMessage("Product name cannot be empty."),
+    body("description").optional().isString(),
+    body("brand").optional().isString(),
+    body("price")
+      .optional()
+      .isFloat({ gt: 0 })
+      .withMessage("Price must be greater than 0."),
+    body("discount")
+      .optional()
+      .isFloat({ min: 0, max: 100 })
+      .withMessage("Discount must be between 0 and 100."),
+    body("thumbnail").optional(),
+    body("thumbnail.location").optional().notEmpty().withMessage("Thumbnail location is required."),
+    body("thumbnail.name").optional().isString(),
+    body("thumbnail.key").optional().isString(),
+    body("images").optional().isArray(),
+    body("images.*.location").optional().notEmpty().withMessage("Each image must have a location."),
+    body("images.*.name").optional().isString(),
+    body("images.*.key").optional().isString(),
+    body("stock")
+      .optional()
+      .isInt({ min: 0 })
+      .withMessage("Stock must be a non-negative integer."),
+    body("reviews").optional().isArray(),
+    body("reviews.*.userId").optional().isMongoId(),
+    body("reviews.*.rating")
+      .optional()
+      .isInt({ min: 1, max: 5 })
+      .withMessage("Rating must be between 1 and 5."),
+    body("reviews.*.comment").optional().isString(),
+    body("variations").optional().isArray(),
+    body("variations.*.variationId").optional().isMongoId(),
+    body("variations.*.options").optional().isArray(),
+    body("variations.*.options.*.optionId").optional().isMongoId(),
+    body("variations.*.options.*.additionalPrice")
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage("Additional price must be at least 0."),
+    body("isFeatured").optional().isBoolean(),
+    body("tags").optional().isArray(),
+    body("tags.*").optional().isString(),
+    body("isArchived").optional().isBoolean(),
+  ],
+};
 
-    body('brand')
-        .optional()
-        .isLength({ max: 50 })
-        .withMessage('Brand name cannot exceed 50 characters'),
-
-    body('price')
-        .isNumeric()
-        .withMessage('Price must be a number')
-        .isFloat({ min: 0 })
-        .withMessage('Price cannot be negative'),
-
-    body('discount')
-        .optional()
-        .isNumeric()
-        .withMessage('Discount must be a number')
-        .isFloat({ min: 0, max: 100 })
-        .withMessage('Discount must be between 0 and 100'),
-
-    body('stock')
-        .optional()
-        .isInt({ min: 0 })
-        .withMessage('Stock cannot be negative'),
-
-    body('images.*.location')
-        .notEmpty()
-        .withMessage('Image location is required'),
-
-    body('reviews.*.rating')
-        .isInt({ min: 1, max: 5 })
-        .withMessage('Rating must be between 1 and 5'),
-    body('reviews.*.comment')
-        .optional()
-        .isLength({ max: 500 })
-        .withMessage('Comment cannot exceed 500 characters'),
-
-    body('variations.*.name')
-        .notEmpty()
-        .withMessage('Variation name is required'),
-    body('variations.*.options.*.value')
-        .notEmpty()
-        .withMessage('Option value is required'),
-    body('variations.*.options.*.additionalPrice')
-        .optional()
-        .isFloat({ min: 0 })
-        .withMessage('Additional price cannot be negative'),
-
-    body('tags.*')
-        .optional()
-        .isLength({ max: 50 })
-        .withMessage('Tag cannot exceed 50 characters'),
-
-    body('isFeatured')
-        .optional()
-        .isBoolean()
-        .withMessage('isFeatured must be a boolean value'),
-
-    body('isArchived')
-        .optional()
-        .isBoolean()
-        .withMessage('isArchived must be a boolean value'),
-
-    (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                message: 'failed',
-                data: null,
-                error: errors.array().join(',')
-            });
-        }
-        next();
-    },
-];
-
-module.exports = validateProduct;
+module.exports = productValidator;
