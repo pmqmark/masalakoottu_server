@@ -9,7 +9,7 @@ exports.validateCreateOption = [
 ];
 
 exports.validateUpdateOption = [
-    param('id')
+    param('optionId')
         .custom((value) => isValidObjectId(value))
         .withMessage('Invalid Option ID'),
 

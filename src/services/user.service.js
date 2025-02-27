@@ -1,4 +1,5 @@
 const { Address } = require("../models/address.model");
+const { Product } = require("../models/product.model");
 const { User } = require("../models/user.model");
 const { hashPassword } = require("../utils/password.util");
 const _ = require('lodash');
@@ -78,9 +79,17 @@ exports.addToCart = async (userId, productId, quantity, variations) => {
     return user.cart
 }
 
+
 exports.getCart = async (userId) => {
     const user = await User.findById(userId)
-        .populate('cart.productId', 'name price thumbnail')
+        .populate({
+            path: 'cart.productId',
+            select: 'name price thumbnail variations',
+            populate: {
+                path: 'variations.options',
+                select: 'optionId additionalPrice'
+            }
+        })
         .populate('cart.variations.variationId', 'name')
         .populate('cart.variations.optionId', 'value')
         .lean();
@@ -89,6 +98,7 @@ exports.getCart = async (userId) => {
 
     const cart = user.cart.map(item => {
         const product = item?.productId || {};
+        const variations = product?.variations || [];
 
         const obj = {
             productId: product._id || null,
@@ -96,13 +106,24 @@ exports.getCart = async (userId) => {
             name: product.name || "Unknown Product",
             price: product.price || 0,
             thumbnail: product.thumbnail || null,
+            variations: []
         };
 
-        obj.variations = (item.variations || []).map(elem => ({
-            name: elem?.variationId?.name || "Unknown Variation",
-            value: elem?.optionId?.value || "Unknown Option",
-            additionalPrice: elem?.additionalPrice || 0
-        }));
+        const cartItemVariations = item.variations || [];
+
+        obj.variations = cartItemVariations.map(elem => {
+            const variationIdStr = elem.variationId?._id?.toString() || null;
+            const optionIdStr = elem.optionId?._id?.toString() || null;
+
+            const variation = variations?.find(v => v?.variationId?.toString() === variationIdStr) || {};
+            const option = variation?.options?.find(opt => opt?.optionId?.toString() === optionIdStr) || {};
+
+            return {
+                name: elem?.variationId?.name || "Unknown Variation",
+                value: elem?.optionId?.value || "Unknown Option",
+                additionalPrice: option?.additionalPrice || 0
+            };
+        });
 
         return obj;
     });
@@ -181,4 +202,26 @@ exports.updateAddress = async (id, obj) => {
 
 exports.deleteAddress = async (id) => {
     return await Address.findByIdAndDelete(id)
+}
+
+
+exports.checkIfVariationExists = async (productId, variations = []) => {
+    const product = await Product.findById(productId);
+
+    const prodVars = product.variations;
+
+    const varExists = variations.every(vr => {
+        const pV = prodVars.find(pv => pv?.variationId?.toString() === vr?.variationId?.toString())
+
+        const optExists = pV.options?.find(opt => opt?.optionId?.toString() === vr?.optionId?.toString())
+
+        if (optExists) {
+            return true
+        }
+        else {
+            return false
+        }
+    })
+
+    return varExists;
 }

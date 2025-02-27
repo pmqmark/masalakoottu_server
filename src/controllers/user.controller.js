@@ -2,7 +2,8 @@ const { isValidObjectId } = require("mongoose");
 const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile,
     getUserByEmail, addToCart, removeFromCart, getCart, removeFromWishlist, getWishlist,
     addToWishlist, createAddress, updateAddress, deleteAddress, fetchManyAddress,
-    fetchSingleAddress } = require("../services/user.service");
+    fetchSingleAddress,
+    checkIfVariationExists } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
@@ -464,6 +465,17 @@ exports.addToCartCtrl = async (req, res) => {
             })
         }
 
+        const existingVariation = await checkIfVariationExists(productId, variations)
+
+        if (!existingVariation) {
+            return res.status(400).json({
+                success: false,
+                message: 'Variation doesn\'t exist in product',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
         const cart = await addToCart(userId, productId, quantity, variations);
 
         return res.status(200).json({
@@ -486,7 +498,7 @@ exports.addToCartCtrl = async (req, res) => {
 
 exports.getCartCtrl = async (req, res) => {
     try {
-        const { userId } = req.body;
+        const { userId } = req.params;
 
         const cart = await getCart(userId)
         res.status(200).json({

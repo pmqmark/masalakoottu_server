@@ -18,7 +18,7 @@ exports.validateCreateVariation = [
 ];
 
 exports.validateUpdateVariation = [
-    param('id')
+    param('variationId')
         .custom((value) => isValidObjectId(value))
         .withMessage('Invalid Variation ID'),
 

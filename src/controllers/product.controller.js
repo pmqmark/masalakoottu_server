@@ -426,8 +426,8 @@ exports.deleteVariationCtrl = async (req, res) => {
 
 exports.createOptionCtrl = async (req, res) => {
     try {
-        const { name } = req.body;
-        if (!name?.trim()) {
+        const { value } = req.body;
+        if (!value?.trim()) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid Data',
@@ -436,7 +436,7 @@ exports.createOptionCtrl = async (req, res) => {
             })
         }
 
-        const option = await createOption({ name })
+        const option = await createOption({ value })
 
         if (!option) {
             return res.status(400).json({
@@ -522,9 +522,9 @@ exports.getManyOptionCtrl = async (req, res) => {
 exports.updateOptionCtrl = async (req, res) => {
     try {
         const { optionId } = req.params;
-        const { name } = req.body;
+        const { value } = req.body;
 
-        const option = await updateOption(optionId, { name })
+        const option = await updateOption(optionId, { value })
 
         if (!option) {
             return res.status(400).json({

@@ -7,11 +7,15 @@ exports.createProduct = async (obj = {}) => {
 }
 
 exports.getProductById = async (id) => {
-    return await Product.findById(id);
+    return await Product.findById(id)
+    .populate("variations.variationId", "name")
+    .populate("variations.options.optionId", "value")
 }
 
 exports.getManyProducts = async (filters = {}) => {
-    return await Product.find(filters);
+    return await Product.find(filters)
+    .populate("variations.variationId", "name")
+    .populate("variations.options.optionId", "value")
 }
 
 exports.updateProduct = async (id, obj = {}) => {

@@ -61,7 +61,7 @@ const UserSchema = new Schema({
                 {
                     variationId: { type: Schema.Types.ObjectId, ref: 'Variation' }, // e.g., 'Color', 'Size'
                     optionId: { type: Schema.Types.ObjectId, ref: 'Option' },
-                    additionalPrice: { type: Number, default: 0 }
+                    // additionalPrice: { type: Number, default: 0 }
                 }
             ]
         },
