@@ -50,9 +50,9 @@ exports.checkoutCtrl = async (req, res) => {
             couponId: null,
         };
 
-        if(couponCode?.trim()){
+        if (couponCode?.trim()) {
             const coupon = await findCouponWithCode(couponCode);
-    
+
             if (!coupon || coupon.expiryDate < new Date() || coupon.userList?.includes(userId)
                 || amount < coupon.minValue) {
                 return res.status(400).json({
@@ -62,22 +62,22 @@ exports.checkoutCtrl = async (req, res) => {
                     error: 'BAD_REQUEST'
                 })
             }
-    
+
             orderObj.couponId = coupon?._id;
 
             let discountAmount = (coupon.value / 100) * amount;
-    
+
             orderObj.discount = Math.min(discountAmount, coupon.maxValue)
-    
+
             orderObj.amount = amount - discountAmount;
 
             await addUserToCouponUsersList(userId, coupon?._id)
         }
 
-        if(typeof deliveryCharge === "number" && deliveryCharge > 0){
+        if (typeof deliveryCharge === "number" && deliveryCharge > 0) {
             orderObj.amount += deliveryCharge
         }
-        
+
         const transactionId = "Masalakoottu_T" + Date.now();
 
         if (payMode !== 'COD') {
@@ -86,12 +86,19 @@ exports.checkoutCtrl = async (req, res) => {
 
         const order = await saveOrder(orderObj)
 
-        if (order) {
-            await decrementProductQty(cart)
-            await clearCart(userId);
+        if (!order) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to save Order',
+                data: null,
+                error: 'INTERNAL_SERVER_ERROR'
+            })
         }
 
         if (payMode === 'COD') {
+            await decrementProductQty(cart)
+            await clearCart(userId);
+
             return res.status(201).json({
                 success: true,
                 message: "Order placed successfully",
@@ -101,6 +108,18 @@ exports.checkoutCtrl = async (req, res) => {
         }
 
         const response = await onlinePayment(transactionId, user, amount)
+
+        if (response?.success === false) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to initiate payment',
+                data: null,
+                error: 'FAILED_PAYMENT_INITIATION'
+            })
+        }
+
+        await decrementProductQty(cart)
+        await clearCart(userId);
 
         return res.status(200).json({
             success: true,

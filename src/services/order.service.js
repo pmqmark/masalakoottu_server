@@ -1,6 +1,7 @@
 const { default: axios } = require("axios");
 const { Order } = require("../models/order.model");
 const { User } = require("../models/user.model");
+const crypto = require("crypto")
 
 const ServerURL = process.env.ServerURL;
 
@@ -54,7 +55,7 @@ exports.onlinePayment = async (transactionId, user, amount) => {
     const sha256 = crypto.createHash('sha256').update(string).digest('hex');
     const checksum = sha256 + '###' + keyIndex;
 
-    const CURRENT_URL = NODE_ENV === development ? `${DEV_BASE_URL_PHONEPE}pay` : `${PROD_BASE_URL_PHONEPE}pay`;
+    const CURRENT_URL = NODE_ENV === "development" ? `${DEV_BASE_URL_PHONEPE}pay` : `${PROD_BASE_URL_PHONEPE}pay`;
 
     const options = {
         method: 'POST',
