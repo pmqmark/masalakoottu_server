@@ -1,6 +1,8 @@
 const { checkoutCtrl, checkPaymentStatusCtrl, updateOrderCtrl, getOrderCtrl, getMyOrdersCtrl, getManyOrdersCtrl, cancelMyOrderCtrl, returnMyOrderCtrl, getMySingleOrderCtrl } = require('../controllers/order.controller');
 const { authMiddleware } = require('../middlewares/auth.middleware');
 const { roleChecker } = require('../middlewares/roleChecker.middleware');
+const { validate } = require("../middlewares/validate.middleware");
+
 const orderRouter = require('express').Router();
 
 /* Below defined route is invoked by Phonepe Server */

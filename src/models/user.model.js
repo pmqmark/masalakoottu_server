@@ -4,7 +4,7 @@ const { credTypeList, genderList, roleList } = require('../config/data');
 const UserSchema = new Schema({
     credType: {
         type: String,
-        enum: credTypeList,
+        enum: ['email', 'mobile', 'googleId'],
         required: true
     },
     googleId: { type: String },
@@ -20,7 +20,7 @@ const UserSchema = new Schema({
     },
     gender: {
         type: String,
-        enum: genderList
+        enum: ['male', 'female', 'other']
     },
     email: {
         type: String,
@@ -69,7 +69,7 @@ const UserSchema = new Schema({
 
     orderHistory: [{ type: Schema.Types.ObjectId, ref: 'Order' }],
 
-    role: { type: String, default: 'user', enum: roleList },
+    role: { type: String, default: 'user', enum: ['user', 'admin'] },
 
     isBlocked: { type: Boolean, default: false },
 

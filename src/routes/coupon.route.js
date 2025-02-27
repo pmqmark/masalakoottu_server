@@ -1,6 +1,7 @@
 const { calculateCouponCtrl, fetchAvailableCouponsCtrl, fetchAllCouponsCtrl, fetchCouponByIdCtrl, createCouponCtrl, updateCouponCtrl } = require("../controllers/coupon.controller");
 const { authMiddleware } = require("../middlewares/auth.middleware");
 const { roleChecker } = require("../middlewares/roleChecker.middleware");
+const { validate } = require("../middlewares/validate.middleware");
 
 const couponRouter = require("express").Router();
 

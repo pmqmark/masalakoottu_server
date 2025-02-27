@@ -1,6 +1,7 @@
 const { postEnquiryCtrl, getManyEnquiryCtrl, getEnquiryByIdCtrl, deleteEnquiryCtrl } = require("../controllers/enquiry.controller");
 const { authMiddleware } = require("../middlewares/auth.middleware");
 const { roleChecker } = require("../middlewares/roleChecker.middleware");
+const { validate } = require("../middlewares/validate.middleware");
 
 const enquiryRouter = require("express").Router();
 
