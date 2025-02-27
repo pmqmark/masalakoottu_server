@@ -1,6 +1,6 @@
 const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
 const { findCouponWithCode, addUserToCouponUsersList } = require("../services/coupon.service");
-const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI, updateOrder, findManyOrders, getOrderById, cancelMyOrder, returnMyOrder } = require("../services/order.service");
+const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI, updateOrder, findManyOrders, getOrderById, cancelMyOrder, returnMyOrder, clearCart } = require("../services/order.service");
 const { decrementProductQty } = require("../services/product.service");
 const { getCart, getUserById } = require("../services/user.service");
 
@@ -38,26 +38,6 @@ exports.checkoutCtrl = async (req, res) => {
             return (total + item?.price * item.quantity)
         }, 0);
 
-        const coupon = await findCouponWithCode(couponCode);
-
-        if (!coupon || coupon.expiryDate < new Date() || coupon.userList?.includes(userId)
-            || amount < coupon.minValue) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid or expired coupon',
-                data: null,
-                error: 'BAD_REQUEST'
-            })
-        }
-
-        let discountAmount = (coupon.value / 100) * amount;
-
-        discountAmount = Math.min(discountAmount, coupon.maxValue)
-
-        amount = amount - discountAmount;
-
-        await addUserToCouponUsersList(userId, coupon?._id)
-
         const orderObj = {
             payMode,
             amount,
@@ -65,11 +45,35 @@ exports.checkoutCtrl = async (req, res) => {
             userId,
             billAddress,
             shipAddress,
-            discount,
             deliveryType,
             deliveryCharge,
-            couponId: coupon?._id,
+            couponId: null,
         };
+
+        if(couponCode?.trim()){
+            const coupon = await findCouponWithCode(couponCode);
+    
+            if (!coupon || coupon.expiryDate < new Date() || coupon.userList?.includes(userId)
+                || amount < coupon.minValue) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid or expired coupon',
+                    data: null,
+                    error: 'BAD_REQUEST'
+                })
+            }
+    
+            orderObj.couponId = coupon?._id;
+
+            let discountAmount = (coupon.value / 100) * amount;
+    
+            orderObj.discount = Math.min(discountAmount, coupon.maxValue)
+    
+            orderObj.amount = amount - discountAmount;
+
+            await addUserToCouponUsersList(userId, coupon?._id)
+        }
+        
 
         const transactionId = "Masalakoottu_T" + Date.now();
 
