@@ -73,8 +73,11 @@ exports.checkoutCtrl = async (req, res) => {
 
             await addUserToCouponUsersList(userId, coupon?._id)
         }
-        
 
+        if(typeof deliveryCharge === "number" && deliveryCharge > 0){
+            orderObj.amount += deliveryCharge
+        }
+        
         const transactionId = "Masalakoottu_T" + Date.now();
 
         if (payMode !== 'COD') {
@@ -261,7 +264,7 @@ exports.getMyOrdersCtrl = async (req, res) => {
     }
 }
 
-exports.getManyOrdersCtrl = async (req, res) => {
+exports.getAllOrdersCtrl = async (req, res) => {
     try {
         const { payMode, payStatus, status, deliveryType } = req.query;
         const filters = {}
