@@ -11,8 +11,8 @@ const { uploadRouter } = require("./routes/upload.route");
 const { productRouter } = require("./routes/product.route");
 const { categoryRouter } = require("./routes/category.route");
 const { orderRouter } = require("./routes/order.route");
-const { couponRouter } = require("./routes/coupon.route");
 const { enquiryRouter } = require("./routes/enquiry.route");
+const { discountRouter } = require("./routes/discount.route");
 const PORT = process.env.PORT || 8080
 const ClientURL = process.env.ClientURL;
 const ClientURL2 = process.env.ClientURL2;
@@ -46,12 +46,12 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use('/api/auth', authRouter)
 app.use('/api/categories', categoryRouter) 
-app.use('/api/coupons', couponRouter) 
 app.use('/api/enquiries', enquiryRouter) 
 app.use('/api/orders', orderRouter) 
 app.use('/api/products', productRouter)
 app.use('/api/uploads', uploadRouter)
 app.use('/api/users', userRouter)
+app.use('/api/discounts', discountRouter)
 
 app.use("*", (req, res) => res.status(404).json({
   success: false,

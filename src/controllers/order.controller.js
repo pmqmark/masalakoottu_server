@@ -1,188 +1,103 @@
 const { isValidObjectId } = require("mongoose");
 const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
-const { findCouponWithCode, addUserToCouponUsersList } = require("../services/coupon.service");
 const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI, updateOrder, findManyOrders, getOrderById, cancelMyOrder, returnMyOrder, clearCart } = require("../services/order.service");
 const { decrementProductQty } = require("../services/product.service");
 const { getCart, getUserById, getBuyNowItem } = require("../services/user.service");
+const { Discount } = require("../models/discount.model");
+const { calculateDiscount, addUserIdToCoupon } = require("../services/discount.service");
 
 const ClientURL = process.env.ClientURL;
 
 
 exports.checkoutCtrl = async (req, res) => {
-
     try {
-        const { billAddress, shipAddress, payMode, deliveryType,
-            deliveryCharge, couponCode,
-            buyMode, productId, quantity, variations } = req.body;
+        const {
+            billAddress, shipAddress, payMode, deliveryType, deliveryCharge = 0,
+            couponCode, buyMode, productId, quantity, variations
+        } = req.body;
 
         const { userId } = req.user;
         const user = await getUserById(userId);
-
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'Not Found',
-                data: null,
-                error: 'NOT_FOUND'
-            })
+            return res.status(404).json({ success: false, message: 'User not found', error: 'NOT_FOUND' });
         }
 
         let items = [];
 
         if (buyMode === "later") {
             items = await getCart(userId);
-
             if (!items || items.length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Empty Cart',
-                    data: null,
-                    error: 'BAD_REQUEST'
-                });
+                return res.status(400).json({ success: false, message: 'Empty Cart', error: 'BAD_REQUEST' });
             }
-        }
-        else if (buyMode === "now") {
-            if (!isValidObjectId(productId)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid Product Id',
-                    data: null,
-                    error: 'BAD_REQUEST'
-                })
+        } else if (buyMode === "now") {
+            if (!isValidObjectId(productId) || quantity <= 0) {
+                return res.status(400).json({ success: false, message: 'Invalid Product Id or Quantity', error: 'BAD_REQUEST' });
             }
-
-            const buyNowItem = await getBuyNowItem(productId, quantity, variations)
+            const buyNowItem = await getBuyNowItem(productId, quantity, variations);
             if (!buyNowItem) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Unable to fetch item',
-                    data: null,
-                    error: 'BAD_REQUEST'
-                });
+                return res.status(400).json({ success: false, message: 'Unable to fetch item', error: 'BAD_REQUEST' });
             }
-
-            items = [buyNowItem]
-        }
-        else {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid Buy Mode',
-                data: null,
-                error: 'BAD_REQUEST'
-            });
+            items = [buyNowItem];
+        } else {
+            return res.status(400).json({ success: false, message: 'Invalid Buy Mode', error: 'BAD_REQUEST' });
         }
 
-console.log({"****************": items})
         let amount = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
-            console.log({total , extraCharges , ip: item?.price , iq: item.quantity})
-            return (total + extraCharges + (item?.price * item.quantity))
+            return total + extraCharges + (item.price * item.quantity);
         }, 0);
+
+        const discountAmount = await calculateDiscount(userId, couponCode, amount, items)
+
+        const orderAmount = amount + Math.max(0, deliveryCharge) - discountAmount;
+        const transactionId = "Masalakoottu_T" + Date.now();
 
         const orderObj = {
             payMode,
-            amount,
+            amount: orderAmount,
             items,
             userId,
             billAddress,
             shipAddress,
+            discount: discountAmount,
             deliveryType,
             deliveryCharge,
-            couponId: null,
+            transactionId
         };
 
-        if (couponCode?.trim()) {
-            const coupon = await findCouponWithCode(couponCode);
-
-            if (!coupon || coupon.expiryDate < new Date() || coupon.userList?.includes(userId)
-                || amount < coupon.minValue) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid or expired coupon',
-                    data: null,
-                    error: 'BAD_REQUEST'
-                })
-            }
-
-            orderObj.couponId = coupon?._id;
-
-            let discountAmount = (coupon.value / 100) * amount;
-
-            orderObj.discount = Math.min(discountAmount, coupon.maxValue)
-
-            orderObj.amount = amount - discountAmount;
-
-            await addUserToCouponUsersList(userId, coupon?._id)
-        }
-
-        if (typeof deliveryCharge === "number" && deliveryCharge > 0) {
-            orderObj.amount += deliveryCharge
-        }
-
-        const transactionId = "Masalakoottu_T" + Date.now();
-
-        if (payMode !== 'COD') {
-            orderObj.transactionId = transactionId;
-        }
-
-        const order = await saveOrder(orderObj)
-
+        const order = await saveOrder(orderObj);
         if (!order) {
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to save Order',
-                data: null,
-                error: 'INTERNAL_SERVER_ERROR'
-            })
+            return res.status(500).json({ success: false, message: 'Failed to save Order', error: 'INTERNAL_SERVER_ERROR' });
+        }
+
+        if (couponCode) {
+            await addUserIdToCoupon(couponCode, userId);
         }
 
         if (payMode === 'COD') {
-            await decrementProductQty(items)
+            await decrementProductQty(items);
+            if (buyMode === "later") await clearCart(userId);
 
-            if (buyMode === "later") {
-                await clearCart(userId);
-            }
-
-            return res.status(201).json({
-                success: true,
-                message: "Order placed successfully",
-                data: { order },
-                error: null
-            })
+            return res.status(201).json({ success: true, message: "Order placed successfully", data: { order } });
         }
 
-        const response = await onlinePayment(transactionId, user, amount)
-
-        if (response?.success === false) {
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to initiate payment',
-                data: null,
-                error: 'FAILED_PAYMENT_INITIATION'
-            })
+        const paymentResponse = await onlinePayment(transactionId, user, orderAmount);
+        if (!paymentResponse?.success) {
+            return res.status(500).json({ success: false, message: 'Failed to initiate payment', error: 'FAILED_PAYMENT_INITIATION' });
         }
 
-        await decrementProductQty(items)
-        if (buyMode === "later") {
-            await clearCart(userId);
-        }
+        await decrementProductQty(items);
+        if (buyMode === "later") await clearCart(userId);
 
         return res.status(200).json({
             success: true,
             message: "Order placed successfully",
-            data: { instrument_response: response?.data.data.instrumentResponse },
-            error: null
-        }
-        );
+            data: { instrument_response: paymentResponse?.data?.data?.instrumentResponse }
+        });
 
     } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            success: false,
-            message: "Internal Server error",
-            data: null,
-            error: 'INTERNAL_SERVER_ERROR'
-        })
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: 'INTERNAL_SERVER_ERROR' });
     }
 };
 
