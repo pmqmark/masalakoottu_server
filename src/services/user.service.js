@@ -209,10 +209,14 @@ exports.deleteAddress = async (id) => {
 
 exports.checkIfVariationExists = async (productId, variations = []) => {
     const product = await Product.findById(productId);
+    console.log({ product })
+    if (!product) {
+        return null;
+    }
+    const prodVars = product?.variations;
+    console.log({ prodVars })
 
-    const prodVars = product.variations;
-
-    const varExists = variations.every(vr => {
+    const varExists = variations?.every(vr => {
         const pV = prodVars.find(pv => pv?.variationId?.toString() === vr?.variationId?.toString())
 
         const optExists = pV.options?.find(opt => opt?.optionId?.toString() === vr?.optionId?.toString())
@@ -230,9 +234,9 @@ exports.checkIfVariationExists = async (productId, variations = []) => {
 
 
 exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
-    const existingVariation = await checkIfVariationExists(productId, variations);
+    const existingVariation = await this.checkIfVariationExists(productId, variations);
     if (!existingVariation) {
-        return null; 
+        return null;
     }
 
     const [product, variationDocs, optionDocs] = await Promise.all([
@@ -241,7 +245,7 @@ exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
         Option.find({ _id: { $in: variations.map(v => v.optionId) } })
     ]);
 
-    if (!product) return null; 
+    if (!product) return null;
 
     const variationMap = new Map(variationDocs.map(v => [v._id.toString(), v.name]));
     const optionMap = new Map(optionDocs.map(o => [o._id.toString(), o.value]));

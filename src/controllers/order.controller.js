@@ -1,3 +1,4 @@
+const { isValidObjectId } = require("mongoose");
 const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
 const { findCouponWithCode, addUserToCouponUsersList } = require("../services/coupon.service");
 const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI, updateOrder, findManyOrders, getOrderById, cancelMyOrder, returnMyOrder, clearCart } = require("../services/order.service");
@@ -41,7 +42,16 @@ exports.checkoutCtrl = async (req, res) => {
             }
         }
         else if (buyMode === "now") {
-            const buyNowItem = getBuyNowItem(productId, quantity, variations)
+            if (!isValidObjectId(productId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid Product Id',
+                    data: null,
+                    error: 'BAD_REQUEST'
+                })
+            }
+
+            const buyNowItem = await getBuyNowItem(productId, quantity, variations)
             if (!buyNowItem) {
                 return res.status(400).json({
                     success: false,
@@ -62,10 +72,10 @@ exports.checkoutCtrl = async (req, res) => {
             });
         }
 
-
+console.log({"****************": items})
         let amount = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
-
+            console.log({total , extraCharges , ip: item?.price , iq: item.quantity})
             return (total + extraCharges + (item?.price * item.quantity))
         }, 0);
 
