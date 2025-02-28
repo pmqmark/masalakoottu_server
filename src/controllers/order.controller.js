@@ -2,7 +2,7 @@ const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = requir
 const { findCouponWithCode, addUserToCouponUsersList } = require("../services/coupon.service");
 const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI, updateOrder, findManyOrders, getOrderById, cancelMyOrder, returnMyOrder, clearCart } = require("../services/order.service");
 const { decrementProductQty } = require("../services/product.service");
-const { getCart, getUserById } = require("../services/user.service");
+const { getCart, getUserById, getBuyNowItem } = require("../services/user.service");
 
 const ClientURL = process.env.ClientURL;
 
@@ -10,9 +10,11 @@ const ClientURL = process.env.ClientURL;
 exports.checkoutCtrl = async (req, res) => {
 
     try {
-        const { userId, billAddress, shipAddress, payMode, deliveryType,
-            deliveryCharge, couponCode } = req.body;
+        const { billAddress, shipAddress, payMode, deliveryType,
+            deliveryCharge, couponCode,
+            buyMode, productId, quantity, variations } = req.body;
 
+        const { userId } = req.user;
         const user = await getUserById(userId);
 
         if (!user) {
@@ -24,24 +26,53 @@ exports.checkoutCtrl = async (req, res) => {
             })
         }
 
-        let cart = await getCart(userId);
-        if (!cart || cart.length === 0) {
+        let items = [];
+
+        if (buyMode === "later") {
+            items = await getCart(userId);
+
+            if (!items || items.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Empty Cart',
+                    data: null,
+                    error: 'BAD_REQUEST'
+                });
+            }
+        }
+        else if (buyMode === "now") {
+            const buyNowItem = getBuyNowItem(productId, quantity, variations)
+            if (!buyNowItem) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Unable to fetch item',
+                    data: null,
+                    error: 'BAD_REQUEST'
+                });
+            }
+
+            items = [buyNowItem]
+        }
+        else {
             return res.status(400).json({
                 success: false,
-                message: 'Empty Cart',
+                message: 'Invalid Buy Mode',
                 data: null,
                 error: 'BAD_REQUEST'
             });
         }
 
-        let amount = cart.reduce((total, item) => {
-            return (total + item?.price * item.quantity)
+
+        let amount = items.reduce((total, item) => {
+            const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
+
+            return (total + extraCharges + (item?.price * item.quantity))
         }, 0);
 
         const orderObj = {
             payMode,
             amount,
-            items: cart,
+            items,
             userId,
             billAddress,
             shipAddress,
@@ -96,8 +127,11 @@ exports.checkoutCtrl = async (req, res) => {
         }
 
         if (payMode === 'COD') {
-            await decrementProductQty(cart)
-            await clearCart(userId);
+            await decrementProductQty(items)
+
+            if (buyMode === "later") {
+                await clearCart(userId);
+            }
 
             return res.status(201).json({
                 success: true,
@@ -118,8 +152,10 @@ exports.checkoutCtrl = async (req, res) => {
             })
         }
 
-        await decrementProductQty(cart)
-        await clearCart(userId);
+        await decrementProductQty(items)
+        if (buyMode === "later") {
+            await clearCart(userId);
+        }
 
         return res.status(200).json({
             success: true,

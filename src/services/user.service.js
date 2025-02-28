@@ -1,6 +1,8 @@
 const { Address } = require("../models/address.model");
+const { Option } = require("../models/option.model");
 const { Product } = require("../models/product.model");
 const { User } = require("../models/user.model");
+const { Variation } = require("../models/variation.model");
 const { hashPassword } = require("../utils/password.util");
 const _ = require('lodash');
 
@@ -225,3 +227,41 @@ exports.checkIfVariationExists = async (productId, variations = []) => {
 
     return varExists;
 }
+
+
+exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
+    const existingVariation = await checkIfVariationExists(productId, variations);
+    if (!existingVariation) {
+        return null; 
+    }
+
+    const [product, variationDocs, optionDocs] = await Promise.all([
+        Product.findById(productId),
+        Variation.find({ _id: { $in: variations.map(v => v.variationId) } }),
+        Option.find({ _id: { $in: variations.map(v => v.optionId) } })
+    ]);
+
+    if (!product) return null; 
+
+    const variationMap = new Map(variationDocs.map(v => [v._id.toString(), v.name]));
+    const optionMap = new Map(optionDocs.map(o => [o._id.toString(), o.value]));
+    const productVarMap = new Map(
+        product.variations?.map(v => [v.variationId.toString(), v.options]) || []
+    );
+
+    return {
+        productId,
+        quantity,
+        name: product.name || "Unknown Product",
+        price: product.price || 0,
+        thumbnail: product.thumbnail || null,
+        variations: variations.map(({ variationId, optionId }) => {
+            const prodOpt = productVarMap.get(variationId)?.find(opt => opt.optionId.toString() === optionId);
+            return {
+                name: variationMap.get(variationId) || "Unknown Variation",
+                value: optionMap.get(optionId) || "Unknown Option",
+                additionalPrice: prodOpt?.additionalPrice || 0
+            };
+        })
+    };
+};

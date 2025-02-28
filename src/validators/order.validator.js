@@ -19,12 +19,6 @@ const orderValidator = {
             .isISO8601()
             .withMessage("expectedDelivery must be a valid date"),
 
-        body("userId")
-            .custom(isValidObjectId)
-            .withMessage("userId must be a valid ObjectId")
-            .notEmpty()
-            .withMessage("userId is required"),
-
         body("billAddress")
             .optional()
             .custom(isValidObjectId)
@@ -118,11 +112,6 @@ const orderValidator = {
             .optional()
             .isArray()
             .withMessage("Variations must be an array"),
-
-        body("userId")
-            .optional()
-            .custom(isValidObjectId)
-            .withMessage("userId must be a valid ObjectId"),
 
         body("billAddress")
             .optional()
