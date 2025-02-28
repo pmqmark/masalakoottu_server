@@ -1,6 +1,6 @@
 const { Product } = require("../models/product.model");
 const { Variation } = require("../models/variation.model");
-const { Option } = require("../models/Option.model");
+const { Option } = require("../models/option.model");
 
 exports.createProduct = async (obj = {}) => {
     return await Product.create(obj);
