@@ -42,9 +42,10 @@ exports.applyAutomaticDiscounts = async (items = []) => {
     });
 
     for (const item of items) {
-        let bestDiscount = 0;
+        let bestDiscountPerItem = 0;
         const productId = item.productId.toString();
         const categoryId = productCategoryMap[productId] || null;
+        const quantity = item.quantity || 1; 
 
         for (const discount of discounts) {
             if (new Date() < discount.startDate || new Date() > discount.endDate) continue;
@@ -63,12 +64,13 @@ exports.applyAutomaticDiscounts = async (items = []) => {
                 discountAmount = discount.maxDiscountAmount;
             }
 
-            bestDiscount = Math.max(bestDiscount, discountAmount);
+            bestDiscountPerItem = Math.max(bestDiscountPerItem, discountAmount);
         }
 
-        if (bestDiscount > 0) {
-            totalDiscountAmount += bestDiscount;
-            discountMessages.push(`Discount applied : -$${bestDiscount}`);
+        if (bestDiscountPerItem > 0) {
+            const totalItemDiscount = bestDiscountPerItem * quantity; 
+            totalDiscountAmount += totalItemDiscount;
+            discountMessages.push(`Discount applied to ${quantity}x ${item?._id}: -$${totalItemDiscount}`);
         }
     }
 

@@ -1,4 +1,4 @@
-const { createDiscount, getDiscounts, getDiscountsById, updateDiscount, deleteDiscount, calculateDiscount } = require("../services/discount.service");
+const { createDiscount, getDiscounts, getDiscountsById, updateDiscount, deleteDiscount} = require("../services/discount.service");
 
 exports.createDiscountCtrl = async (req, res) => {
     try {
@@ -103,24 +103,3 @@ exports.fetchAvailableCouponsCtrl = async (req, res) => {
     }
 }
 
-exports.calculateDiscountCtrl = async (req, res) => {
-    const { userId, couponCode, amount, items } = req.body;
-
-    try {
-        const discountAmount = await calculateDiscount(userId, couponCode, amount, items)
-
-        return res.status(200).json({
-            success: true,
-            message: 'success',
-            data: { discountAmount },
-            error: null
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Internal Server error",
-            data: null,
-            error: 'INTERNAL_SERVER_ERROR'
-        })
-    }
-};

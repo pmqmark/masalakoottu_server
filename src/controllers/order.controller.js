@@ -43,7 +43,7 @@ exports.checkoutCtrl = async (req, res) => {
 
         let amount = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
-            return total + extraCharges + (item.price * item.quantity);
+            return total + ((item.price + extraCharges) * item.quantity);
         }, 0);
 
         let discountAmount = 0;
