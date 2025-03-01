@@ -12,6 +12,7 @@ orderRouter.post('/check-pay-status/:txnId', checkPaymentStatusCtrl)
 orderRouter.use(authMiddleware)
 
 orderRouter.use(roleChecker(['user', 'admin']))
+
 orderRouter.post('/checkout', orderValidator.create, validate, checkoutCtrl)
 orderRouter.get('/own', getMyOrdersCtrl)
 orderRouter.get('/own/:orderId', getMySingleOrderCtrl)
@@ -19,6 +20,7 @@ orderRouter.patch('/cancel/:orderId', cancelMyOrderCtrl)
 orderRouter.patch('/return/:orderId', returnMyOrderCtrl)
 
 orderRouter.use(roleChecker(['admin']))
+
 orderRouter.put('/:orderId', orderValidator.update, validate, updateOrderCtrl)
 orderRouter.get('/all', getAllOrdersCtrl)
 orderRouter.get('/:orderId', getOrderCtrl)

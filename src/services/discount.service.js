@@ -5,8 +5,8 @@ exports.createDiscount = async (obj) => {
     return await Discount.create(obj)
 }
 
-exports.getDiscounts = async (filters) => {
-    return await Discount.find(filters)
+exports.getDiscounts = async (filters, projects) => {
+    return await Discount.find(filters, projects)
 }
 
 exports.getDiscountsById = async (id) => {

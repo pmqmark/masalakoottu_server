@@ -22,12 +22,12 @@ userRouter.get("/wishlists", getWishlistCtrl);
 userRouter.get("/carts", getCartCtrl);
 
 userRouter.post('/addresses', validateCreateAddress, validate, postAddresssesCtrl)
-userRouter.put('/addresses', validateUpdateAddress, validate, updateAddresssesCtrl)
-userRouter.delete('/addresses', deleteAddresssesCtrl)
+userRouter.put('/addresses/:addressId', validateUpdateAddress, validate, updateAddresssesCtrl)
+userRouter.delete('/addresses/:addressId', deleteAddresssesCtrl)
 
 userRouter.get('/addresses/own', roleChecker(['user']), getUserAddresssesCtrl)
-userRouter.get('/address/all', roleChecker(['admin']), getAllAddresssesCtrl)
-userRouter.get('/address/:addressId', getOneAddressCtrl)
+userRouter.get('/addresses/all', roleChecker(['admin']), getAllAddresssesCtrl)
+userRouter.get('/addresses/:addressId', getOneAddressCtrl)
 
 userRouter.get('/profile', roleChecker(['user']), getUserProfileByIdCtrl)
 userRouter.put('', userValidator.update, validate, updateUserCtrl)

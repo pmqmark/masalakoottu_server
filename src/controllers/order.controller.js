@@ -356,7 +356,7 @@ exports.returnMyOrderCtrl = async (req, res) => {
 
         const order = await getOrderById(orderId);
         if (order?.userId?.toString() !== userId) {
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: "Unauthorised",
                 data: null,

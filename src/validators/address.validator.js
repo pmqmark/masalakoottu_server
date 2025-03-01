@@ -38,7 +38,7 @@ exports.validateCreateAddress = [
 
 exports.validateUpdateAddress = [
     
-    param('id')
+    param('addressId')
         .custom((value) => isValidObjectId(value))
         .withMessage('Invalid address ID'),
 

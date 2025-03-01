@@ -1,3 +1,4 @@
+const { isValidObjectId } = require("mongoose");
 const { createDiscount, getDiscounts, getDiscountsById, updateDiscount, deleteDiscount} = require("../services/discount.service");
 
 exports.createDiscountCtrl = async (req, res) => {
@@ -83,8 +84,9 @@ exports.fetchAvailableCouponsCtrl = async (req, res) => {
         }
 
         const filters = { appliesAutomatically: false, usedBy: { $nin: [userId] }, isActive: true, endDate: { $gte: new Date() } }
+        const projects = {usedBy:0}
 
-        const availableCoupons = await getDiscounts(filters)
+        const availableCoupons = await getDiscounts(filters, projects)
 
         return res.status(200).json({
             success: true,
