@@ -3,18 +3,6 @@ const { body } = require("express-validator");
 const categoryValidator = {
   create: [
     body("name").trim().notEmpty().withMessage("Category name is required."),
-    body("offerValue")
-      .optional()
-      .isFloat({ min: 0, max: 100 })
-      .withMessage("Offer value must be between 0 and 100."),
-    body("maxValue")
-      .optional()
-      .isFloat({ min: 0 })
-      .withMessage("Max value must be a positive number."),
-    body("minValue")
-      .optional()
-      .isFloat({ min: 0 })
-      .withMessage("Min value must be a positive number."),
     body("description").optional().isString(),
     body("isArchived").optional().isBoolean(),
     body("image").optional(),
@@ -27,18 +15,6 @@ const categoryValidator = {
 
   update: [
     body("name").optional().trim().notEmpty().withMessage("Category name cannot be empty."),
-    body("offerValue")
-      .optional()
-      .isFloat({ min: 0, max: 100 })
-      .withMessage("Offer value must be between 0 and 100."),
-    body("maxValue")
-      .optional()
-      .isFloat({ min: 0 })
-      .withMessage("Max value must be a positive number."),
-    body("minValue")
-      .optional()
-      .isFloat({ min: 0 })
-      .withMessage("Min value must be a positive number."),
     body("description").optional().isString(),
     body("isArchived").optional().isBoolean(),
     body("image").optional(),

@@ -3,12 +3,12 @@ const { createProduct, updateProduct, updateProductStatus, getProductById, getMa
 
 exports.createProductCtrl = async (req, res) => {
     try {
-        const { name, description, brand, price, discount, images,
+        const { name, description, brand, price, images,
             stock, reviews, variations, isFeatured, tags, isArchived
         } = req.body;
 
         const createObj = {
-            name, description, brand, price, discount, images,
+            name, description, brand, price, images,
             stock, reviews, variations, isFeatured, tags, isArchived
         }
 

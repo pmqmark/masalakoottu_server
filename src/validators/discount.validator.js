@@ -1,5 +1,6 @@
 const { body, param, validationResult } = require("express-validator");
 const mongoose = require("mongoose");
+const { discountTypeList } = require("../config/data");
 
 const validate = (req, res, next) => {
     const errors = validationResult(req);
@@ -12,7 +13,7 @@ const validate = (req, res, next) => {
 const discountValidator = [
     body("code").optional().isString().trim(),
     body("description").optional().isString().trim(),
-    body("discountType").isIn(["percentage", "fixed"]).withMessage("Invalid discount type"),
+    body("discountType").isIn(discountTypeList).withMessage("Invalid discount type"),
     body("discountValue").isFloat({ gt: 0 }).withMessage("Discount value must be greater than 0"),
     body("minOrderAmount").optional().isFloat({ min: 0 }),
     body("maxDiscountAmount").optional().isFloat({ min: 0 }),

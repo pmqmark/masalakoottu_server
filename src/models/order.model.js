@@ -59,12 +59,13 @@ const OrderSchema = new mongoose.Schema(
     ],
 
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    discount: { type: Number, default: 0 },
+    deliveryCharge: { type: Number, default: 0 },
+    
     billAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
     shipAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address", required: true },
 
-    discount: { type: Number, default: 0 },
     deliveryType: { type: String, enum: deliveryTypeList, default: 'Standard' },
-    deliveryCharge: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

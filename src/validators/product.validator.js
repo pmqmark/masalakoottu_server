@@ -8,10 +8,6 @@ const productValidator = {
     body("price")
       .notEmpty().withMessage("Price is required.")
       .isFloat({ gt: 0 }).withMessage("Price must be greater than 0."),
-    body("discount")
-      .optional()
-      .isFloat({ min: 0, max: 100 })
-      .withMessage("Discount must be between 0 and 100."),
     body("thumbnail").optional(),
     body("thumbnail.location").optional().notEmpty().withMessage("Thumbnail location is required."),
     body("thumbnail.name").optional().isString(),
@@ -53,10 +49,6 @@ const productValidator = {
       .optional()
       .isFloat({ gt: 0 })
       .withMessage("Price must be greater than 0."),
-    body("discount")
-      .optional()
-      .isFloat({ min: 0, max: 100 })
-      .withMessage("Discount must be between 0 and 100."),
     body("thumbnail").optional(),
     body("thumbnail.location").optional().notEmpty().withMessage("Thumbnail location is required."),
     body("thumbnail.name").optional().isString(),

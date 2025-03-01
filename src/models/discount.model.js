@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
+const { discountTypeList } = require("../config/data");
 
 const discountSchema = new mongoose.Schema({
     code: { type: String, unique: true, sparse: true },
     description: { type: String },
-    discountType: { type: String, enum: ["percentage", "fixed"], required: true },
+    discountType: { type: String, enum: discountTypeList, required: true },
     discountValue: { type: Number, required: true },
     minOrderAmount: { type: Number, default: 0 },
     maxDiscountAmount: { type: Number },

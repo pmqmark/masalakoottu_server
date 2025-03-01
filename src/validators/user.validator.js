@@ -1,9 +1,10 @@
 const { body } = require("express-validator");
+const { credTypeList, genderList, roleList } = require("../config/data");
 
 const userValidator = {
   create: [
     body("credType")
-      .isIn(["email", "mobile", "googleId"])
+      .isIn(credTypeList)
       .withMessage("credType must be one of 'email', 'mobile', or 'googleId'."),
     body("googleId")
       .optional()
@@ -13,7 +14,7 @@ const userValidator = {
     body("lastName").optional().trim().isString(),
     body("gender")
       .optional()
-      .isIn(["male", "female", "other"])
+      .isIn(genderList)
       .withMessage("Gender must be 'male', 'female', or 'other'."),
     body("email")
       .if(body("credType").equals("email"))
@@ -63,7 +64,7 @@ const userValidator = {
     body("orderHistory.*").optional().isMongoId().withMessage("Invalid order ID."),
     body("role")
       .optional()
-      .isIn(["user", "admin"])
+      .isIn(roleList)
       .withMessage("Role must be either 'user' or 'admin'."),
     body("isBlocked").optional().isBoolean(),
   ],
@@ -71,14 +72,14 @@ const userValidator = {
   update: [
     body("credType")
       .optional()
-      .isIn(["email", "mobile", "googleId"])
+      .isIn(credTypeList)
       .withMessage("credType must be one of 'email', 'mobile', or 'googleId'."),
     body("googleId").optional().isString(),
     body("firstName").optional().trim().notEmpty().withMessage("First name cannot be empty."),
     body("lastName").optional().trim().isString(),
     body("gender")
       .optional()
-      .isIn(["male", "female", "other"])
+      .isIn(genderList)
       .withMessage("Gender must be 'male', 'female', or 'other'."),
     body("email")
       .optional()
@@ -122,7 +123,7 @@ const userValidator = {
     body("orderHistory.*").optional().isMongoId().withMessage("Invalid order ID."),
     body("role")
       .optional()
-      .isIn(["user", "admin"])
+      .isIn(roleList)
       .withMessage("Role must be either 'user' or 'admin'."),
     body("isBlocked").optional().isBoolean(),
   ],

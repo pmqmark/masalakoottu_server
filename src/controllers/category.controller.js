@@ -3,11 +3,11 @@ const { createCategory, updateCategory, updateCategoryStatus, getCategoryById, g
 
 exports.createCategoryCtrl = async (req, res) => {
     try {
-        const { name, offerValue, maxValue, minValue, description, 
-            image, isArchived} = req.body;
+        const { name, description,
+            image, isArchived } = req.body;
 
         const createObj = {
-            name, offerValue, maxValue, minValue, description, 
+            name, offerValue, maxValue, minValue, description,
             image, isArchived
         }
 

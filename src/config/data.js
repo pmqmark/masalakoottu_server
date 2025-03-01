@@ -13,3 +13,5 @@ exports.orderStatusList = ['pending', 'processing', 'billed', 'packed', 'shipped
 exports.deliveryTypeList = ['Standard', 'Express']
 
 exports.enquiryTypeList = ['Contact']
+
+exports.discountTypeList = ["percentage", "fixed"]
