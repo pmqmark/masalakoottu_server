@@ -2,12 +2,12 @@ const { isValidObjectId } = require("mongoose");
 const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile,
     getUserByEmail, addToCart, removeFromCart, getCart, removeFromWishlist, getWishlist,
     addToWishlist, createAddress, updateAddress, deleteAddress, fetchManyAddress,
-    fetchSingleAddress,
-    checkIfVariationExists } = require("../services/user.service");
+    fetchSingleAddress } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
 const { genderList, roleList } = require("../config/data");
+const { checkIfVariationExists } = require("../services/product.service");
 
 // Accessible to Public
 exports.registerUserCtrl = async (req, res) => {
@@ -133,9 +133,9 @@ exports.registerUserCtrl = async (req, res) => {
 // Accessible to user
 exports.getUserProfileByIdCtrl = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const { userId } = req.user;
 
-        if (!isValidObjectId(id)) {
+        if (!isValidObjectId(userId)) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid Id',
@@ -144,18 +144,7 @@ exports.getUserProfileByIdCtrl = async (req, res, next) => {
             })
         }
 
-        const { userId } = req.user;
-
-        if (id !== userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'Unauthorized',
-                data: null,
-                error: 'UNAUTHORIZED'
-            })
-        }
-
-        const user = await getUserById(id)
+        const user = await getUserById(userId)
 
         if (!user) {
             throw new Error('FAILED')
@@ -243,9 +232,9 @@ exports.createUserCtrl = async (req, res) => {
 
 exports.updateUserCtrl = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const { userId } = req.user;
 
-        if (!isValidObjectId(id)) {
+        if (!isValidObjectId(userId)) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid Id',
@@ -286,10 +275,15 @@ exports.updateUserCtrl = async (req, res, next) => {
             updateObj.password = hashedPassword
         }
 
-        const user = await updateUser(id, updateObj)
+        const user = await updateUser(userId, updateObj)
 
         if (!user) {
-            throw new Error('FAILED')
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+                data: null,
+                error: 'USER_NOT_FOUND'
+            })
         }
 
         return res.status(201).json({
@@ -498,7 +492,7 @@ exports.addToCartCtrl = async (req, res) => {
 
 exports.getCartCtrl = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const { userId } = req.user;
 
         const cart = await getCart(userId)
         res.status(200).json({
@@ -586,7 +580,7 @@ exports.addToWishlistCtrl = async (req, res) => {
 
 exports.getWishlistCtrl = async (req, res) => {
     try {
-        const { userId } = req.body;
+        const { userId } = req.user;
 
         const wishlist = await getWishlist(userId)
         res.status(200).json({

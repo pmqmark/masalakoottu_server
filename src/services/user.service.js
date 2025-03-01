@@ -1,8 +1,5 @@
 const { Address } = require("../models/address.model");
-const { Option } = require("../models/option.model");
-const { Product } = require("../models/product.model");
 const { User } = require("../models/user.model");
-const { Variation } = require("../models/variation.model");
 const { hashPassword } = require("../utils/password.util");
 const _ = require('lodash');
 
@@ -136,9 +133,9 @@ exports.getCart = async (userId) => {
 
 exports.removeFromCart = async (userId, productId, variations) => {
     const user = await User.findById(userId);
-    if (!user) throw new Error("User not found");
+    if (!user || !Array.isArray(user?.cart)) throw new Error("Cart not found");
 
-    let cart = user.cart;
+    let cart = user?.cart;
 
     const itemIndex = cart.findIndex(item =>
         item.productId.toString() === productId &&
@@ -206,66 +203,6 @@ exports.deleteAddress = async (id) => {
     return await Address.findByIdAndDelete(id)
 }
 
-
-exports.checkIfVariationExists = async (productId, variations = []) => {
-    const product = await Product.findById(productId);
-    console.log({ product })
-    if (!product) {
-        return null;
-    }
-    const prodVars = product?.variations;
-    console.log({ prodVars })
-
-    const varExists = variations?.every(vr => {
-        const pV = prodVars.find(pv => pv?.variationId?.toString() === vr?.variationId?.toString())
-
-        const optExists = pV.options?.find(opt => opt?.optionId?.toString() === vr?.optionId?.toString())
-
-        if (optExists) {
-            return true
-        }
-        else {
-            return false
-        }
-    })
-
-    return varExists;
+exports.countUsers = async (filters = {}) => {
+    return await User.countDocuments(filters)
 }
-
-
-exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
-    const existingVariation = await this.checkIfVariationExists(productId, variations);
-    if (!existingVariation) {
-        return null;
-    }
-
-    const [product, variationDocs, optionDocs] = await Promise.all([
-        Product.findById(productId),
-        Variation.find({ _id: { $in: variations.map(v => v.variationId) } }),
-        Option.find({ _id: { $in: variations.map(v => v.optionId) } })
-    ]);
-
-    if (!product) return null;
-
-    const variationMap = new Map(variationDocs.map(v => [v._id.toString(), v.name]));
-    const optionMap = new Map(optionDocs.map(o => [o._id.toString(), o.value]));
-    const productVarMap = new Map(
-        product.variations?.map(v => [v.variationId.toString(), v.options]) || []
-    );
-
-    return {
-        productId,
-        quantity,
-        name: product.name || "Unknown Product",
-        price: product.price || 0,
-        thumbnail: product.thumbnail || null,
-        variations: variations.map(({ variationId, optionId }) => {
-            const prodOpt = productVarMap.get(variationId)?.find(opt => opt.optionId.toString() === optionId);
-            return {
-                name: variationMap.get(variationId) || "Unknown Variation",
-                value: optionMap.get(optionId) || "Unknown Option",
-                additionalPrice: prodOpt?.additionalPrice || 0
-            };
-        })
-    };
-};

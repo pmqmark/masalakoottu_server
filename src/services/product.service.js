@@ -84,3 +84,67 @@ exports.updateOption = async (id, obj) => {
 exports.deleteOption = async (id) => {
     return await Option.findByIdAndDelete(id)
 }
+
+
+exports.checkIfVariationExists = async (productId, variations = []) => {
+    const product = await Product.findById(productId);
+    console.log({ product })
+    if (!product) {
+        return null;
+    }
+    const prodVars = product?.variations;
+    console.log({ prodVars })
+
+    const varExists = variations?.every(vr => {
+        const pV = prodVars.find(pv => pv?.variationId?.toString() === vr?.variationId?.toString())
+
+        const optExists = pV.options?.find(opt => opt?.optionId?.toString() === vr?.optionId?.toString())
+
+        if (optExists) {
+            return true
+        }
+        else {
+            return false
+        }
+    })
+
+    return varExists;
+}
+
+
+exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
+    const existingVariation = await this.checkIfVariationExists(productId, variations);
+    if (!existingVariation) {
+        return null;
+    }
+
+    const [product, variationDocs, optionDocs] = await Promise.all([
+        Product.findById(productId),
+        Variation.find({ _id: { $in: variations.map(v => v.variationId) } }),
+        Option.find({ _id: { $in: variations.map(v => v.optionId) } })
+    ]);
+
+    if (!product) return null;
+
+    const variationMap = new Map(variationDocs.map(v => [v._id.toString(), v.name]));
+    const optionMap = new Map(optionDocs.map(o => [o._id.toString(), o.value]));
+    const productVarMap = new Map(
+        product.variations?.map(v => [v.variationId.toString(), v.options]) || []
+    );
+
+    return {
+        productId,
+        quantity,
+        name: product.name || "Unknown Product",
+        price: product.price || 0,
+        thumbnail: product.thumbnail || null,
+        variations: variations.map(({ variationId, optionId }) => {
+            const prodOpt = productVarMap.get(variationId)?.find(opt => opt.optionId.toString() === optionId);
+            return {
+                name: variationMap.get(variationId) || "Unknown Variation",
+                value: optionMap.get(optionId) || "Unknown Option",
+                additionalPrice: prodOpt?.additionalPrice || 0
+            };
+        })
+    };
+};

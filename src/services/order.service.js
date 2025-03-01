@@ -1,7 +1,8 @@
 const { default: axios } = require("axios");
 const { Order } = require("../models/order.model");
 const { User } = require("../models/user.model");
-const crypto = require("crypto")
+const crypto = require("crypto");
+const { orderStatusList } = require("../config/data");
 
 const ServerURL = process.env.ServerURL;
 
@@ -135,5 +136,27 @@ exports.returnMyOrder = async (orderId) => {
     }, { new: true })
 }
 
+exports.countOrders = async (filters = {}) => {
+    return await Order.countDocuments(filters)
+}
 
+exports.orderStatusAndCountHandler = async () => {
+    if (!Array.isArray(orderStatusList) || orderStatusList.length === 0) {
+        throw new Error("orderStatusList is empty or not an array");
+    }
 
+    const dbqueries = orderStatusList.map((item) => (
+        Order.countDocuments({ status: item })
+    ))
+
+    const countArr = await Promise.all(dbqueries)
+
+    // const statusVsCount = orderStatusList.map((item, index) => (
+    //     { [item]: countArr[index] }
+    // ))
+
+    return {
+        statuses: orderStatusList,
+        counts: countArr
+    }
+}

@@ -8,7 +8,7 @@ exports.payModeList = ['COD', 'Credit Card', 'UPI', 'Net Banking'];
 
 exports.payStatusList = ['pending', 'success', 'failed'];
 
-exports.orderStatusList = ['pending', 'shipped', 'delivered', 'cancelled', 'returned']
+exports.orderStatusList = ['pending', 'processing', 'billed', 'packed', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded']
 
 exports.deliveryTypeList = ['Standard', 'Express']
 

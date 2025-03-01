@@ -1,9 +1,8 @@
 const { isValidObjectId } = require("mongoose");
 const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
 const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI, updateOrder, findManyOrders, getOrderById, cancelMyOrder, returnMyOrder, clearCart } = require("../services/order.service");
-const { decrementProductQty } = require("../services/product.service");
-const { getCart, getUserById, getBuyNowItem } = require("../services/user.service");
-const { Discount } = require("../models/discount.model");
+const { decrementProductQty, getBuyNowItem } = require("../services/product.service");
+const { getCart, getUserById } = require("../services/user.service");
 const { calculateDiscount, addUserIdToCoupon } = require("../services/discount.service");
 
 const ClientURL = process.env.ClientURL;
@@ -297,10 +296,10 @@ exports.cancelMyOrderCtrl = async (req, res) => {
             })
         }
 
-        if (['delivered', 'cancelled', 'returned']?.includes(order?.status)) {
+        if (['delivered', 'cancelled', 'returned', 'refunded']?.includes(order?.status)) {
             return res.status(400).json({
                 success: false,
-                message: 'Order is either delivered , cancelled or returned',
+                message: 'Unable to cancel the order' ,
                 data: null,
                 error: 'BAD_REQUEST'
             })

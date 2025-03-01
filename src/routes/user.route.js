@@ -7,17 +7,19 @@ const { userValidator } = require("../validators/user.validator");
 
 const userRouter = require("express").Router();
 
-userRouter.post("/wishlists/add", addToWishlistCtrl);
-userRouter.get("/wishlists/:userId", getWishlistCtrl);
-userRouter.post("/wishlists/remove", removeFromWishlistCtrl);
-
-userRouter.post("/carts/add", addToCartCtrl);
-userRouter.get("/carts/:userId", getCartCtrl);
-userRouter.post("/carts/remove", removeFromCartCtrl);
 
 userRouter.post('/register', userValidator.create, validate, registerUserCtrl)
 
 userRouter.use(authMiddleware)
+
+userRouter.post("/wishlists/add", addToWishlistCtrl);
+userRouter.post("/wishlists/remove", removeFromWishlistCtrl);
+
+userRouter.post("/carts/add", addToCartCtrl);
+userRouter.post("/carts/remove", removeFromCartCtrl);
+
+userRouter.get("/wishlists", getWishlistCtrl);
+userRouter.get("/carts", getCartCtrl);
 
 userRouter.post('/addresses', validateCreateAddress, validate, postAddresssesCtrl)
 userRouter.put('/addresses', validateUpdateAddress, validate, updateAddresssesCtrl)
@@ -27,8 +29,8 @@ userRouter.get('/addresses/own', roleChecker(['user']), getUserAddresssesCtrl)
 userRouter.get('/address/all', roleChecker(['admin']), getAllAddresssesCtrl)
 userRouter.get('/address/:addressId', getOneAddressCtrl)
 
-userRouter.get('/profile/:id', roleChecker(['user']), getUserProfileByIdCtrl)
-userRouter.put('/:id', userValidator.update, validate, updateUserCtrl)
+userRouter.get('/profile', roleChecker(['user']), getUserProfileByIdCtrl)
+userRouter.put('', userValidator.update, validate, updateUserCtrl)
 
 userRouter.use(roleChecker(['admin']))
 
