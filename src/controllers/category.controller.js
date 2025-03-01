@@ -7,7 +7,7 @@ exports.createCategoryCtrl = async (req, res) => {
             image, isArchived } = req.body;
 
         const createObj = {
-            name, offerValue, maxValue, minValue, description,
+            name, description,
             image, isArchived
         }
 

@@ -11,7 +11,7 @@ exports.findEnquiryById = async (id) => {
 }
 
 exports.getManyEnquiries = async (filters) => {
-    await Enquiry.find(filters).sort({ createdAt: -1 })
+    return await Enquiry.find(filters).sort({ createdAt: -1 })
 }
 
 exports.deleteEnquiry = async (id) => {
