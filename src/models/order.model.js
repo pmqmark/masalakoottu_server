@@ -20,7 +20,7 @@ const OrderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: orderStatusList,
-      default: 'pending',
+      default: 'processing',
     },
 
     amount: { type: Number, required: true },
@@ -61,7 +61,7 @@ const OrderSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     discount: { type: Number, default: 0 },
     deliveryCharge: { type: Number, default: 0 },
-    
+
     billAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
     shipAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address", required: true },
 

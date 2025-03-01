@@ -6,9 +6,9 @@ exports.roleList = ['user', 'admin'];
 
 exports.payModeList = ['COD', 'Credit Card', 'UPI', 'Net Banking'];
 
-exports.payStatusList = ['pending', 'success', 'failed'];
+exports.payStatusList = ['pending', 'success', 'failed', 'refunded'];
 
-exports.orderStatusList = ['pending', 'processing', 'billed', 'packed', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded']
+exports.orderStatusList = ['processing', 'billed', 'packed', 'shipped', 'delivered', 'cancelled', 'returned']
 
 exports.deliveryTypeList = ['Standard', 'Express']
 

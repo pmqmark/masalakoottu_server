@@ -3,7 +3,7 @@ const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = requir
 const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI, updateOrder, findManyOrders, getOrderById, cancelMyOrder, returnMyOrder, clearCart } = require("../services/order.service");
 const { decrementProductQty, getBuyNowItem } = require("../services/product.service");
 const { getCart, getUserById } = require("../services/user.service");
-const { calculateDiscount, addUserIdToCoupon } = require("../services/discount.service");
+const { calculateDiscount, addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
 
 const ClientURL = process.env.ClientURL;
 
@@ -46,7 +46,22 @@ exports.checkoutCtrl = async (req, res) => {
             return total + extraCharges + (item.price * item.quantity);
         }, 0);
 
-        const discountAmount = await calculateDiscount(userId, couponCode, amount, items)
+        let discountAmount = 0;
+        const { autoDiscountAmt, autoDiscountMsg } = await applyAutomaticDiscounts(items)
+        console.log({ autoDiscountMsg })
+
+        if (typeof autoDiscountAmt === "number" && autoDiscountAmt > 0) {
+            discountAmount += autoDiscountAmt;
+        }
+
+        if (couponCode?.trim()) {
+            const { couponDiscountAmt, couponDiscountMsg } = await applyCouponDiscount(userId, couponCode, amount)
+            console.log({ couponDiscountMsg })
+
+            if (typeof couponDiscountAmt === "number" && couponDiscountAmt > 0) {
+                discountAmount += couponDiscountAmt
+            }
+        }
 
         const orderAmount = amount + Math.max(0, deliveryCharge) - discountAmount;
         const transactionId = "Masalakoottu_T" + Date.now();
@@ -299,7 +314,7 @@ exports.cancelMyOrderCtrl = async (req, res) => {
         if (['delivered', 'cancelled', 'returned', 'refunded']?.includes(order?.status)) {
             return res.status(400).json({
                 success: false,
-                message: 'Unable to cancel the order' ,
+                message: 'Unable to cancel the order',
                 data: null,
                 error: 'BAD_REQUEST'
             })

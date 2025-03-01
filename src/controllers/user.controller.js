@@ -448,7 +448,9 @@ exports.getManyUsersCtrl = async (req, res, next) => {
 
 exports.addToCartCtrl = async (req, res) => {
     try {
-        const { userId, productId, quantity, variations } = req.body;
+        const { userId } = req.user;
+
+        const { productId, quantity, variations } = req.body;
 
         if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
             return res.status(400).json({
@@ -513,7 +515,9 @@ exports.getCartCtrl = async (req, res) => {
 
 exports.removeFromCartCtrl = async (req, res) => {
     try {
-        const { userId, productId, variations } = req.body;
+        const { userId } = req.user;
+
+        const { productId, variations } = req.body;
 
         if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
             return res.status(400).json({
@@ -547,7 +551,8 @@ exports.removeFromCartCtrl = async (req, res) => {
 
 exports.addToWishlistCtrl = async (req, res) => {
     try {
-        const { userId, productId } = req.body;
+        const { userId } = req.user;
+        const { productId } = req.body;
 
         if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
             return res.status(400).json({
@@ -601,7 +606,9 @@ exports.getWishlistCtrl = async (req, res) => {
 
 exports.removeFromWishlistCtrl = async (req, res) => {
     try {
-        const { userId, productId } = req.body;
+        const { userId } = req.user;
+
+        const { productId } = req.body;
 
         if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
             return res.status(400).json({
@@ -634,7 +641,7 @@ exports.removeFromWishlistCtrl = async (req, res) => {
 
 exports.getUserAddresssesCtrl = async (req, res) => {
     try {
-        const userId = req.user.userId;
+        const { userId } = req.user;
 
         const user = await getUserById(userId);
 

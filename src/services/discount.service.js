@@ -25,78 +25,121 @@ exports.deleteDiscount = async (id) => {
     return await Discount.findByIdAndDelete(id)
 }
 
-exports.applyAutomaticDiscounts = async (order) => {
-    const { amount, products, categories } = order;
+exports.applyAutomaticDiscounts = async (items = []) => {
+    let totalDiscountAmount = 0;
+    let discountMessages = [];
 
     const discounts = await Discount.find({ appliesAutomatically: true, isActive: true });
 
-    let bestDiscount = { discountAmount: 0, message: "" };
+    const productIds = items.map(it => it.productId.toString());
+    const categoryDocs = await Category.find({ productIds: { $in: productIds } }, { _id: 1, productIds: 1 });
 
-    discounts.forEach((discount) => {
-        if (new Date() < discount.startDate || new Date() > discount.endDate) return;
+    const productCategoryMap = {};
+    categoryDocs.forEach(cat => {
+        cat.productIds.forEach(pid => {
+            productCategoryMap[pid.toString()] = cat._id.toString();
+        });
+    });
 
-        const appliesToOrder =
-            discount.applicableProducts.some((id) => products.includes(id.toString())) ||
-            discount.applicableCategories.some((id) => categories.includes(id.toString()));
+    for (const item of items) {
+        let bestDiscount = 0;
+        const productId = item.productId.toString();
+        const categoryId = productCategoryMap[productId] || null;
 
-        if (!appliesToOrder || amount < discount.minOrderAmount) return;
+        for (const discount of discounts) {
+            if (new Date() < discount.startDate || new Date() > discount.endDate) continue;
+
+            const appliesToProduct = discount.applicableProducts.some(id => id.toString() === productId);
+            const appliesToCategory = categoryId && discount.applicableCategories.some(id => id.toString() === categoryId);
+
+            if ((!appliesToProduct && !appliesToCategory) || item.price < discount.minOrderAmount) continue;
+
+            let discountAmount =
+                discount.discountType === "percentage"
+                    ? (item.price * discount.discountValue) / 100
+                    : discount.discountValue;
+
+            if (discount.maxDiscountAmount && discountAmount > discount.maxDiscountAmount) {
+                discountAmount = discount.maxDiscountAmount;
+            }
+
+            bestDiscount = Math.max(bestDiscount, discountAmount);
+        }
+
+        if (bestDiscount > 0) {
+            totalDiscountAmount += bestDiscount;
+            discountMessages.push(`Discount applied : -$${bestDiscount}`);
+        }
+    }
+
+    return {
+        autoDiscountAmt: totalDiscountAmount,
+        autoDiscountMsg: discountMessages.length > 0 ? discountMessages.join(", ") : "No automatic discounts applied",
+    };
+};
+
+exports.applyCouponDiscount = async (userId, couponCode = "", amount = 0) => {
+    let discountAmount = 0, discountMessage = "";
+
+    const discountResponse = await Discount.findOne({ code: couponCode, isActive: true });
+    if (!discountResponse || new Date() < discountResponse.startDate || new Date() > discountResponse.endDate) {
+        throw new Error("Invalid or expired coupon")
+    }
+
+    if (discountResponse.usedBy.some(id => id.toString() === userId)) {
+        throw new Error("Coupon already used")
+    }
+
+    discountAmount = discountResponse.discountType === "percentage"
+        ? (amount * discountResponse.discountValue) / 100
+        : discountResponse.discountValue;
+
+    if (discountResponse.maxDiscountAmount && discountAmount > discountResponse.maxDiscountAmount) {
+        discountAmount = discountResponse.maxDiscountAmount;
+    }
+
+    discountMessage = `Discount applied: ${couponCode}`;
+
+    discountAmount = Math.min(discountAmount, amount);
+
+    return {
+        couponDiscountAmt: discountAmount,
+        couponDiscountMsg: discountMessage
+    }
+}
+
+
+exports.applyAutoDiscountToAProduct = async (productId) => {
+    let discountMessages = [];
+
+    const discounts = await Discount.find({ appliesAutomatically: true, isActive: true });
+    const categoryDoc = await Category.findOne({ productIds: { $in: [productId] } }, { _id: 1 });
+    const categoryId = categoryDoc?._id?.toString();
+
+    let bestDiscount = 0;
+
+    for (const discount of discounts) {
+        if (new Date() < discount.startDate || new Date() > discount.endDate) continue;
+
+        const appliesToProduct = discount.applicableProducts.some(id => id.toString() === productId);
+        const appliesToCategory = categoryId && discount.applicableCategories.some(id => id.toString() === categoryId);
+
+        if ((!appliesToProduct && !appliesToCategory) || item.price < discount.minOrderAmount) continue;
 
         let discountAmount =
             discount.discountType === "percentage"
-                ? (amount * discount.discountValue) / 100
+                ? (item.price * discount.discountValue) / 100
                 : discount.discountValue;
 
         if (discount.maxDiscountAmount && discountAmount > discount.maxDiscountAmount) {
             discountAmount = discount.maxDiscountAmount;
         }
 
-        if (discountAmount > bestDiscount.discountAmount) {
-            bestDiscount = {
-                discountAmount,
-                message: `Automatic discount applied: -$${discountAmount}`,
-            };
-        }
-    });
-
-    return bestDiscount;
-};
-
-
-exports.calculateDiscount = async (userId, couponCode = "", amount = 0, items = []) => {
-
-    let discountAmount = 0, discountMessage = "";
-
-    if (couponCode) {
-        const discountResponse = await Discount.findOne({ code: couponCode, isActive: true });
-        if (!discountResponse || new Date() < discountResponse.startDate || new Date() > discountResponse.endDate) {
-            return res.status(400).json({ success: false, message: "Invalid or expired coupon", error: "INVALID_COUPON" });
-        }
-
-        if (discountResponse.usedBy.some(id => id.toString() === userId)) {
-            return res.status(400).json({ success: false, message: "Coupon already used", error: "COUPON_ALREADY_USED" });
-        }
-
-        discountAmount = discountResponse.discountType === "percentage"
-            ? (amount * discountResponse.discountValue) / 100
-            : discountResponse.discountValue;
-
-        if (discountResponse.maxDiscountAmount && discountAmount > discountResponse.maxDiscountAmount) {
-            discountAmount = discountResponse.maxDiscountAmount;
-        }
-
-        discountMessage = `Discount applied: ${couponCode}`;
-    } else {
-        const productIds = items.map(it => String(it.productId));
-        const categories = await Category.find({ productIds: { $in: productIds } }, { _id: 1 });
-        const categoryIds = categories.map(cat => String(cat._id));
-
-        const autoDiscount = await this.applyAutomaticDiscounts({ amount, products: productIds, categories: categoryIds }) || { discountAmount: 0, message: "" };
-
-        discountAmount = autoDiscount.discountAmount;
-        discountMessage = autoDiscount.message;
+        bestDiscount = Math.max(bestDiscount, discountAmount);
     }
 
-    discountAmount = Math.min(discountAmount, amount);
-
-    return discountAmount;
-}
+    return {
+        autoDiscountAmt: bestDiscount,
+        autoDiscountMsg: discountMessages.length > 0 ? discountMessages.join(", ") : "No automatic discounts applied",
+    };
+};
