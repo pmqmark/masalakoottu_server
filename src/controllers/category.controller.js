@@ -1,5 +1,6 @@
 const { isValidObjectId } = require("mongoose");
 const { createCategory, updateCategory, updateCategoryStatus, getCategoryById, getManyCategories } = require("../services/category.service");
+const { deleteFileFromDO } = require("../utils/storage.util");
 
 exports.createCategoryCtrl = async (req, res) => {
     try {
@@ -48,18 +49,37 @@ exports.updateCategoryCtrl = async (req, res, next) => {
             })
         }
 
-        const updateObj = req.body;
-
-        const category = await updateCategory(id, updateObj)
+        const category = await getCategoryById(id)
 
         if (!category) {
+            return res.status(400).json({
+                success: false,
+                message: 'Not Found',
+                data: null,
+                error: 'NOT_FOUND'
+            })
+        }
+
+        const updateObj = req.body;
+
+        if (category?.image?.key && (updateObj?.image?.key !== category?.image?.key)) {
+            try {
+                await deleteFileFromDO(category?.image?.key)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        const updatedCategory = await updateCategory(id, updateObj)
+
+        if (!updatedCategory) {
             throw new Error('FAILED')
         }
 
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { category },
+            data: { category: updatedCategory },
             error: null
         })
 

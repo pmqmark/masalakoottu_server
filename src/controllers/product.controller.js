@@ -1,5 +1,6 @@
 const { isValidObjectId } = require("mongoose");
 const { createProduct, updateProduct, updateProductStatus, getProductById, getManyProducts, createVariation, updateVariation, getOneVariation, deleteVariation, getManyVariation, createOption, getOneOption, getManyOption, updateOption, deleteOption } = require("../services/product.service");
+const { deleteMultipleFilesFromDO, deleteFileFromDO } = require("../utils/storage.util");
 
 exports.createProductCtrl = async (req, res) => {
     try {
@@ -36,7 +37,7 @@ exports.createProductCtrl = async (req, res) => {
     }
 }
 
-exports.updateProductCtrl = async (req, res, next) => {
+exports.updateProductCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -49,18 +50,51 @@ exports.updateProductCtrl = async (req, res, next) => {
             })
         }
 
-        const updateObj = req.body;
-
-        const product = await updateProduct(id, updateObj)
+        const product = await getProductById(id)
 
         if (!product) {
+            return res.status(400).json({
+                success: false,
+                message: 'Not Found',
+                data: null,
+                error: 'NOT_FOUND'
+            })
+        }
+
+        const updateObj = req.body;
+
+        if (product?.thumbnail?.key && updateObj?.thumbnail?.key && (updateObj?.thumbnail?.key !== product?.thumbnail?.key)) {
+            try {
+                await deleteFileFromDO(product?.thumbnail?.key)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        const oldImgKeys = Array.isArray(product?.images) ? product?.images?.map(img => img?.key) : [];
+        const newImgKeys = Array.isArray(updateObj?.images) ? updateObj?.images?.map(img => img?.key) : [];
+
+        if (oldImgKeys?.length > 0) {
+            const deletableKeys = oldImgKeys?.filter(oik => !newImgKeys?.includes(oik))
+            if (deletableKeys?.length > 0) {
+                try {
+                    await deleteMultipleFilesFromDO(deletableKeys)
+                } catch (error) {
+                    console.log(error)
+                }
+            }
+        }
+
+        const updatedProduct = await updateProduct(id, updateObj)
+
+        if (!updatedProduct) {
             throw new Error('FAILED')
         }
 
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { product },
+            data: { product: updatedProduct },
             error: null
         })
 
@@ -265,7 +299,7 @@ exports.getAllProductsCtrl = async (req, res, next) => {
 
 exports.createVariationCtrl = async (req, res) => {
     try {
-        const { name, options=[] } = req.body;
+        const { name, options = [] } = req.body;
         if (!name?.trim()) {
             return res.status(400).json({
                 success: false,
