@@ -15,7 +15,7 @@ exports.createTestimonialCtrl = async (req, res) => {
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { testimonial },
+            data: { result: testimonial },
             error: null
         })
     } catch (error) {
@@ -51,7 +51,7 @@ exports.getTestimonialByIdCtrl = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: 'success',
-            data: { testimonial },
+            data: { result: testimonial },
             error: null
         })
 
