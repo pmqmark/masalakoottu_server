@@ -9,11 +9,11 @@ const testimonialRouter = express.Router();
 
 testimonialRouter.get('', testimonialCtrl.getManyTestimonialsCtrl);
 testimonialRouter.get('/:id', testimonialCtrl.getTestimonialByIdCtrl);
+testimonialRouter.post('', testimonialValidator, validate, testimonialCtrl.createTestimonialCtrl);
 
 testimonialRouter.use(authMiddleware)
 testimonialRouter.use(roleChecker(['admin']))
 
-testimonialRouter.post('', testimonialValidator, validate, testimonialCtrl.createTestimonialCtrl);
 testimonialRouter.put('/:id', testimonialValidator, validate, testimonialCtrl.updateTestimonialCtrl);
 testimonialRouter.delete('/:id', testimonialCtrl.deleteTestimonialCtrl);
 
