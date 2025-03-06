@@ -5,11 +5,12 @@ const { validate } = require("../middlewares/validate.middleware");
 const {categoryValidator} = require("../validators/category.validator")
 const categoryRouter = require("express").Router();
 
+categoryRouter.get('/many', getManyCategoriesCtrl)
+categoryRouter.get('/:id', getCategoryByIdCtrl)
+
 categoryRouter.use(authMiddleware)
 
 categoryRouter.get('/all', roleChecker(['admin']), getAllCategorysCtrl)
-categoryRouter.get('/many', getManyCategoriesCtrl)
-categoryRouter.get('/:id', getCategoryByIdCtrl)
 
 categoryRouter.use(roleChecker(['admin']))
 categoryRouter.post('', categoryValidator.create, validate, createCategoryCtrl)

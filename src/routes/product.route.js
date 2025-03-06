@@ -8,19 +8,17 @@ const { validateCreateVariation, validateUpdateVariation } = require("../validat
 
 const productRouter = require("express").Router();
 
-productRouter.use(authMiddleware)
-
-productRouter.get('/all', roleChecker(['admin']), getAllProductsCtrl)
-
 productRouter.get('/options', getManyOptionCtrl)
 productRouter.get('/options/:optionId', getOneOptionCtrl)
 
 productRouter.get('/variations', getManyVariationCtrl)
 productRouter.get('/variations/:variationId', getOneVariationCtrl)
 
+productRouter.get('/all', authMiddleware, roleChecker(['admin']), getAllProductsCtrl)
 productRouter.get('/many', getManyProductsCtrl)
 productRouter.get('/:id', getProductByIdCtrl)
 
+productRouter.use(authMiddleware)
 productRouter.use(roleChecker(['admin']))
 
 productRouter.post('/options', validateCreateOption, validate, createOptionCtrl)
