@@ -91,7 +91,7 @@ exports.updateProductCtrl = async (req, res) => {
             throw new Error('FAILED')
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: 'success',
             data: { product: updatedProduct },
@@ -146,7 +146,7 @@ exports.updateProductStatusCtrl = async (req, res, next) => {
             throw new Error('FAILED')
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: 'success',
             data: { product },
@@ -184,7 +184,7 @@ exports.getProductByIdCtrl = async (req, res) => {
             throw new Error('FAILED')
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: 'success',
             data: { product },
