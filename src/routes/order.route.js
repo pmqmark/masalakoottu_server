@@ -14,7 +14,7 @@ orderRouter.use(authMiddleware)
 
 orderRouter.use(roleChecker(['user', 'admin']))
 
-orderRouter.post('/checkout', convertAddressesesToIds, orderValidator.create, validate, checkoutCtrl)
+orderRouter.post('/checkout',orderValidator.create, validate, convertAddressesesToIds,  checkoutCtrl)
 orderRouter.get('/own', getMyOrdersCtrl)
 orderRouter.get('/own/:orderId', getMySingleOrderCtrl)
 orderRouter.patch('/cancel/:orderId', cancelMyOrderCtrl)

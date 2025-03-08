@@ -111,7 +111,10 @@ exports.checkoutCtrl = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ success: false, message: "Internal Server Error", error: 'INTERNAL_SERVER_ERROR' });
+        return res.status(500).json({ 
+            success: false, 
+            message: error?.message ?? "Internal Server Error", 
+            error: 'INTERNAL_SERVER_ERROR' });
     }
 };
 
