@@ -106,7 +106,7 @@ exports.checkoutCtrl = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Order placed successfully",
-            data: { instrument_response: paymentResponse?.data?.data?.instrumentResponse }
+            data: { instrument_response: paymentResponse?.data?.instrumentResponse }
         });
 
     } catch (error) {
