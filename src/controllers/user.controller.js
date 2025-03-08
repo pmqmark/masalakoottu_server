@@ -151,10 +151,14 @@ exports.getUserProfileByIdCtrl = async (req, res, next) => {
             throw new Error('FAILED')
         }
 
+        const filters = { userId }
+
+        const addresses = await fetchManyAddress(filters)
+
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { user },
+            data: { user, addresses },
             error: null
         })
 
@@ -694,7 +698,7 @@ exports.getUserAddresssesCtrl = async (req, res) => {
             })
         }
 
-        const filters = { _id: { $in: user?.addresses } }
+        const filters = { userId }
 
         const addresses = await fetchManyAddress(filters)
 
@@ -772,9 +776,10 @@ exports.getOneAddressCtrl = async (req, res) => {
 
 exports.postAddresssesCtrl = async (req, res) => {
     try {
+        const {userId} = req.user;
         const createObj = req.body;
 
-        const address = await createAddress(createObj)
+        const address = await createAddress({...createObj, userId})
 
         return res.status(200).json({
             success: true,
