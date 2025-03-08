@@ -6,11 +6,13 @@ const { roleChecker } = require("../middlewares/roleChecker.middleware");
 const discountRouter = express.Router();
 
 discountRouter.get("/", discountController.getDiscountsCtrl);
+
+discountRouter.post("/fetch-coupon-value", authMiddleware, discountController.fetchCouponValue);
+discountRouter.get("/available-coupons", authMiddleware, discountController.fetchAvailableCouponsCtrl);
+
 discountRouter.get("/:id", discountController.getDiscountByIdCtrl);
 
 discountRouter.use(authMiddleware)
-discountRouter.get("/available-coupons", discountController.fetchAvailableCouponsCtrl);
-
 discountRouter.use(roleChecker(['admin']))
 
 discountRouter.post("/", discountValidatorCreate, discountController.createDiscountCtrl);

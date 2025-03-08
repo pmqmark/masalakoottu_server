@@ -1,5 +1,5 @@
 const { isValidObjectId } = require("mongoose");
-const { createDiscount, getDiscounts, getDiscountsById, updateDiscount, deleteDiscount} = require("../services/discount.service");
+const { createDiscount, getDiscounts, getDiscountsById, updateDiscount, deleteDiscount, applyCouponDiscount } = require("../services/discount.service");
 
 exports.createDiscountCtrl = async (req, res) => {
     try {
@@ -84,7 +84,7 @@ exports.fetchAvailableCouponsCtrl = async (req, res) => {
         }
 
         const filters = { appliesAutomatically: false, usedBy: { $nin: [userId] }, isActive: true, endDate: { $gte: new Date() } }
-        const projects = {usedBy:0}
+        const projects = { usedBy: 0 }
 
         const availableCoupons = await getDiscounts(filters, projects)
 
@@ -105,3 +105,28 @@ exports.fetchAvailableCouponsCtrl = async (req, res) => {
     }
 }
 
+exports.fetchCouponValue = async (req, res) => {
+    try {
+        const { userId } = req.user;
+        const { couponCode, amount } = req.body;
+
+        const { couponDiscountAmt, couponDiscountMsg } = await applyCouponDiscount(userId, couponCode, amount)
+
+        return res.status(200).json({
+            success: true,
+            message: couponDiscountMsg ?? 'success',
+            data: {
+                discount: couponDiscountAmt
+            },
+            error: null
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(error?.statusCode ?? 500).json({
+            success: false,
+            message: error?.message ?? "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
