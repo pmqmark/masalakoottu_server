@@ -2,7 +2,8 @@ const { isValidObjectId } = require("mongoose");
 const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, getUserByMobile,
     getUserByEmail, addToCart, removeFromCart, getCart, removeFromWishlist, getWishlist,
     addToWishlist, createAddress, updateAddress, deleteAddress, fetchManyAddress,
-    fetchSingleAddress } = require("../services/user.service");
+    fetchSingleAddress,
+    updateCart } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
@@ -110,12 +111,12 @@ exports.registerUserCtrl = async (req, res) => {
             throw new Error('FAILED')
         }
 
-        const { password: pwd, ...userInfo } = user?.toObject()
+        // const { password: pwd, ...userInfo } = user?.toObject()
 
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { user: userInfo },
+            data: null,
             error: null
         })
 
@@ -150,10 +151,14 @@ exports.getUserProfileByIdCtrl = async (req, res, next) => {
             throw new Error('FAILED')
         }
 
+        const filters = { userId }
+
+        const addresses = await fetchManyAddress(filters)
+
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { user },
+            data: { user, addresses },
             error: null
         })
 
@@ -513,13 +518,13 @@ exports.getCartCtrl = async (req, res) => {
     }
 };
 
-exports.removeFromCartCtrl = async (req, res) => {
+exports.updateCartCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
-        const { productId, variations } = req.body;
+        const { itemId, quantity } = req.body;
 
-        if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
+        if (!isValidObjectId(userId) || !isValidObjectId(itemId)) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid Id',
@@ -528,7 +533,7 @@ exports.removeFromCartCtrl = async (req, res) => {
             })
         }
 
-        const cart = await removeFromCart(userId, productId, variations);
+        const cart = await updateCart(userId, itemId, quantity);
 
         return res.status(200).json({
             success: true,
@@ -538,10 +543,49 @@ exports.removeFromCartCtrl = async (req, res) => {
         })
 
     } catch (error) {
-        console.error(error)
-        res.status(500).json({
+        console.log(error)
+        const msg = error?.message;
+
+        return res.status(500).json({
             success: false,
-            message: "Internal Server error",
+            message: msg ?? "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.removeFromCartCtrl = async (req, res) => {
+    try {
+        const { userId } = req.user;
+
+        const { itemId } = req.body;
+
+        if (!isValidObjectId(userId) || !isValidObjectId(itemId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Id',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        const cart = await removeFromCart(userId, itemId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { cart },
+            error: null
+        })
+
+    } catch (error) {
+        console.log(error)
+        const msg = error?.message;
+
+        return res.status(500).json({
+            success: false,
+            message: msg ?? "Internal Server error",
             data: null,
             error: 'INTERNAL_SERVER_ERROR'
         })
@@ -654,7 +698,7 @@ exports.getUserAddresssesCtrl = async (req, res) => {
             })
         }
 
-        const filters = { _id: { $in: user?.addresses } }
+        const filters = { userId }
 
         const addresses = await fetchManyAddress(filters)
 
@@ -732,9 +776,10 @@ exports.getOneAddressCtrl = async (req, res) => {
 
 exports.postAddresssesCtrl = async (req, res) => {
     try {
+        const {userId} = req.user;
         const createObj = req.body;
 
-        const address = await createAddress(createObj)
+        const address = await createAddress({...createObj, userId})
 
         return res.status(200).json({
             success: true,

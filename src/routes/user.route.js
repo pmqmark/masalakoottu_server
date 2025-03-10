@@ -1,4 +1,4 @@
-const { createUserCtrl, updateUserCtrl, updateUserStatusCtrl, getManyUsersCtrl, getUserByIdCtrl, getUserProfileByIdCtrl, registerUserCtrl, addToCartCtrl, getCartCtrl, removeFromCartCtrl, addToWishlistCtrl, getWishlistCtrl, removeFromWishlistCtrl, getUserAddresssesCtrl, getAllAddresssesCtrl, getOneAddressCtrl, postAddresssesCtrl, updateAddresssesCtrl, deleteAddresssesCtrl } = require("../controllers/user.controller");
+const { createUserCtrl, updateUserCtrl, updateUserStatusCtrl, getManyUsersCtrl, getUserByIdCtrl, getUserProfileByIdCtrl, registerUserCtrl, addToCartCtrl, getCartCtrl, removeFromCartCtrl, addToWishlistCtrl, getWishlistCtrl, removeFromWishlistCtrl, getUserAddresssesCtrl, getAllAddresssesCtrl, getOneAddressCtrl, postAddresssesCtrl, updateAddresssesCtrl, deleteAddresssesCtrl, updateCartCtrl } = require("../controllers/user.controller");
 const { authMiddleware } = require("../middlewares/auth.middleware");
 const { roleChecker } = require("../middlewares/roleChecker.middleware");
 const { validate } = require("../middlewares/validate.middleware");
@@ -16,6 +16,7 @@ userRouter.post("/wishlists/add", addToWishlistCtrl);
 userRouter.post("/wishlists/remove", removeFromWishlistCtrl);
 
 userRouter.post("/carts/add", addToCartCtrl);
+userRouter.put("/carts/update", updateCartCtrl);
 userRouter.post("/carts/remove", removeFromCartCtrl);
 
 userRouter.get("/wishlists", getWishlistCtrl);

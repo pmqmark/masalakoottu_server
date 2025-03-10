@@ -76,7 +76,7 @@ exports.userLogin = async (req, res) => {
 
         const refreshToken = generateRefreshToken({ userId: String(user._id), role: user.role })
 
-        const { password:pwd, credType:ctype, ...userInfo } = user;
+        const { password:pwd, credType:ctype, cart, ...userInfo } = user;
 
         return res.status(200).json({
             success: true,

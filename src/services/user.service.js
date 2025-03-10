@@ -57,7 +57,7 @@ exports.updatePassword = async (id, password) => {
     }, { new: true })
 }
 
-exports.addToCart = async (userId, productId, quantity, variations) => {
+exports.addToCart = async (userId, productId, quantity, variations=[]) => {
     const user = await User.findById(userId)
     let cart = user.cart;
 
@@ -70,6 +70,30 @@ exports.addToCart = async (userId, productId, quantity, variations) => {
         cart[itemIndex].quantity += quantity;
     } else {
         cart.push({ productId, quantity, variations })
+    }
+
+    user.cart = cart;
+
+    await user.save();
+    return user.cart
+}
+
+exports.updateCart = async (userId, itemId, quantity) => {
+    if (quantity < 0) {
+        throw new Error("QUANTITY_CANNOT_BE_NEGATIVE");
+    }
+
+    const user = await User.findById(userId)
+    let cart = user.cart;
+
+    const itemIndex = cart.findIndex(item =>
+        item._id.toString() === itemId
+    );
+
+    if (itemIndex > -1) {
+        cart[itemIndex].quantity = quantity;
+    } else {
+        throw new Error("ITEM_NOT_IN_CART")
     }
 
     user.cart = cart;
@@ -100,6 +124,7 @@ exports.getCart = async (userId) => {
         const variations = product?.variations || [];
 
         const obj = {
+            _id: item?._id,
             productId: product._id || null,
             quantity: item?.quantity || 1,
             name: product.name || "Unknown Product",
@@ -120,7 +145,9 @@ exports.getCart = async (userId) => {
             return {
                 name: elem?.variationId?.name || "Unknown Variation",
                 value: elem?.optionId?.value || "Unknown Option",
-                additionalPrice: option?.additionalPrice || 0
+                additionalPrice: option?.additionalPrice || 0,
+                variationId: variationIdStr,
+                optionId: optionIdStr,
             };
         });
 
@@ -131,16 +158,35 @@ exports.getCart = async (userId) => {
 };
 
 
-exports.removeFromCart = async (userId, productId, variations) => {
+// exports.removeFromCart = async (userId, productId, variations=[]) => {
+//     const user = await User.findById(userId);
+//     if (!user || !Array.isArray(user?.cart)) throw new Error("Cart not found");
+
+//     let cart = user?.cart;
+
+//     const itemIndex = cart.findIndex(item =>
+//         item.productId.toString() === productId &&
+//         _.isEqual(normalizeVariations(item.variations), normalizeVariations(variations))
+//     );
+
+//     if (itemIndex > -1) {
+//         cart.splice(itemIndex, 1);
+//     } else {
+//         throw new Error("Item not found in cart");
+//     }
+
+//     user.cart = cart;
+//     await user.save();
+//     return user.cart;
+// };
+
+exports.removeFromCart = async (userId, itemId) => {
     const user = await User.findById(userId);
     if (!user || !Array.isArray(user?.cart)) throw new Error("Cart not found");
 
     let cart = user?.cart;
 
-    const itemIndex = cart.findIndex(item =>
-        item.productId.toString() === productId &&
-        _.isEqual(normalizeVariations(item.variations), normalizeVariations(variations))
-    );
+    const itemIndex = cart.findIndex(item => item._id.toString() === itemId);
 
     if (itemIndex > -1) {
         cart.splice(itemIndex, 1);

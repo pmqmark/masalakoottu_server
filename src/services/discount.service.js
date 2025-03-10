@@ -70,7 +70,7 @@ exports.applyAutomaticDiscounts = async (items = []) => {
         if (bestDiscountPerItem > 0) {
             const totalItemDiscount = bestDiscountPerItem * quantity; 
             totalDiscountAmount += totalItemDiscount;
-            discountMessages.push(`Discount applied to ${quantity}x ${item?._id}: -$${totalItemDiscount}`);
+            discountMessages.push(`Discount : ${quantity}x ${item?._id}: -$${totalItemDiscount}`);
         }
     }
 
@@ -85,11 +85,15 @@ exports.applyCouponDiscount = async (userId, couponCode = "", amount = 0) => {
 
     const discountResponse = await Discount.findOne({ code: couponCode, isActive: true });
     if (!discountResponse || new Date() < discountResponse.startDate || new Date() > discountResponse.endDate) {
-        throw new Error("Invalid or expired coupon")
+        const err = new Error("Invalid or expired coupon")
+        err.statusCode = 400;
+        throw err
     }
 
     if (discountResponse.usedBy.some(id => id.toString() === userId)) {
-        throw new Error("Coupon already used")
+        const err = new Error("Coupon already used")
+        err.statusCode = 400;
+        throw err
     }
 
     discountAmount = discountResponse.discountType === "percentage"
@@ -100,7 +104,7 @@ exports.applyCouponDiscount = async (userId, couponCode = "", amount = 0) => {
         discountAmount = discountResponse.maxDiscountAmount;
     }
 
-    discountMessage = `Discount applied: ${couponCode}`;
+    discountMessage = `Discount : ${couponCode}`;
 
     discountAmount = Math.min(discountAmount, amount);
 

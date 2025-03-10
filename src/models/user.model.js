@@ -37,7 +37,7 @@ const UserSchema = new Schema({
     password: {
         type: String,
     },
-    addresses: [{ type: Schema.Types.ObjectId, ref: 'Address' }],
+    // addresses: [{ type: Schema.Types.ObjectId, ref: 'Address' }],
 
     wishlist: [
         {

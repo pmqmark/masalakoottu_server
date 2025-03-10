@@ -1,5 +1,6 @@
 const { checkoutCtrl, checkPaymentStatusCtrl, updateOrderCtrl, getOrderCtrl, getMyOrdersCtrl, getAllOrdersCtrl, cancelMyOrderCtrl, returnMyOrderCtrl, getMySingleOrderCtrl } = require('../controllers/order.controller');
 const { authMiddleware } = require('../middlewares/auth.middleware');
+const { convertAddressesesToIds } = require('../middlewares/converter.middleware');
 const { roleChecker } = require('../middlewares/roleChecker.middleware');
 const { validate } = require("../middlewares/validate.middleware");
 const { orderValidator } = require('../validators/order.validator');
@@ -13,7 +14,7 @@ orderRouter.use(authMiddleware)
 
 orderRouter.use(roleChecker(['user', 'admin']))
 
-orderRouter.post('/checkout', orderValidator.create, validate, checkoutCtrl)
+orderRouter.post('/checkout',orderValidator.create, validate, convertAddressesesToIds,  checkoutCtrl)
 orderRouter.get('/own', getMyOrdersCtrl)
 orderRouter.get('/own/:orderId', getMySingleOrderCtrl)
 orderRouter.patch('/cancel/:orderId', cancelMyOrderCtrl)

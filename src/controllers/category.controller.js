@@ -76,7 +76,7 @@ exports.updateCategoryCtrl = async (req, res, next) => {
             throw new Error('FAILED')
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: 'success',
             data: { category: updatedCategory },
