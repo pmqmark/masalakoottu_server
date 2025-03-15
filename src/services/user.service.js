@@ -230,6 +230,10 @@ exports.fetchManyAddress = async (filters) => {
     return await Address.find(filters)
 }
 
+exports.fetchOneAddress = async (filters) => {
+    return await Address.findOne(filters)
+}
+
 
 exports.fetchSingleAddress = async (id) => {
     return await Address.findById(id)

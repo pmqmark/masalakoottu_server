@@ -151,6 +151,8 @@ exports.getUserProfileByIdCtrl = async (req, res, next) => {
             throw new Error('FAILED')
         }
 
+        const {password, ...userInfo} = user
+
         const filters = { userId }
 
         const addresses = await fetchManyAddress(filters)
@@ -158,7 +160,7 @@ exports.getUserProfileByIdCtrl = async (req, res, next) => {
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { user, addresses },
+            data: { user: userInfo, addresses },
             error: null
         })
 
@@ -276,6 +278,8 @@ exports.updateUserCtrl = async (req, res, next) => {
         }
 
         if (password?.trim()) {
+            console.log({password})
+
             const hashedPassword = await hashPassword(password)
             updateObj.password = hashedPassword
         }
@@ -291,10 +295,12 @@ exports.updateUserCtrl = async (req, res, next) => {
             })
         }
 
+        const { password: pwd, ...userInfo } = user.toObject()
+
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { user },
+            data: { user: userInfo },
             error: null
         })
 
@@ -705,7 +711,7 @@ exports.getUserAddresssesCtrl = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "success",
-            data: { addresses },
+            data: { result: addresses },
             error: null,
         })
     } catch (error) {
@@ -776,10 +782,10 @@ exports.getOneAddressCtrl = async (req, res) => {
 
 exports.postAddresssesCtrl = async (req, res) => {
     try {
-        const {userId} = req.user;
+        const { userId } = req.user;
         const createObj = req.body;
 
-        const address = await createAddress({...createObj, userId})
+        const address = await createAddress({ ...createObj, userId })
 
         return res.status(200).json({
             success: true,

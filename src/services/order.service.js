@@ -120,7 +120,7 @@ exports.getOrderById = async (id) => {
 
 
 exports.findManyOrders = async (filters) => {
-    return await Order.find(filters)
+    return await Order.find(filters).sort({createdAt: -1})
 }
 
 

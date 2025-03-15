@@ -1,15 +1,15 @@
-const { createAddress } = require("../services/user.service");
+const { fetchOneAddress } = require("../services/user.service");
 
-exports.convertAddressesesToIds = async (req, res, next) => {
+exports.addBillnShipAddress = async (req, res, next) => {
     try {
         const { userId } = req.user;
-        const { billAddress, shipAddress } = req.body;
 
-        const billAddressDoc = await createAddress({ ...billAddress, userId })
-        const shipAddressDoc = await createAddress({ ...shipAddress, userId })
+        const address = await fetchOneAddress({ userId })
 
-        req.body.billAddress = billAddressDoc?._id;
-        req.body.shipAddress = shipAddressDoc?._id;
+        if (address) {
+            req.body.billAddress = address?._id;
+            req.body.shipAddress = address?._id;
+        }
 
         next()
     } catch (error) {
