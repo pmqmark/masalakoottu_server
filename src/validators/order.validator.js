@@ -19,27 +19,6 @@ const orderValidator = {
             .isISO8601()
             .withMessage("expectedDelivery must be a valid date"),
 
-        // body('billAddress.fullName')
-        //     .notEmpty().withMessage('Full name in billing address is required')
-        //     .isString().withMessage('Full name in billing address must be a string')
-        //     .trim(),
-        // body('billAddress.pincode')
-        //     .notEmpty().withMessage('Pincode in billing address is required')
-        //     .matches(/^\d{6}$/).withMessage('Pincode in billing address must be a 6-digit number'),
-        // body('billAddress.phoneNumber')
-        //     .notEmpty().withMessage('Phone number in billing address is required')
-        //     .matches(/^\d{10}$/).withMessage('Phone number in billing address must be a 10-digit number'),
-
-        // body('shipAddress.fullName')
-        //     .notEmpty().withMessage('Full name in shipping address is required')
-        //     .isString().withMessage('Full name in shipping address must be a string')
-        //     .trim(),
-        // body('shipAddress.pincode')
-        //     .notEmpty().withMessage('Pincode in shipping address is required')
-        //     .matches(/^\d{6}$/).withMessage('Pincode in shipping address must be a 6-digit number'),
-        // body('shipAddress.phoneNumber')
-        //     .notEmpty().withMessage('Phone number in shipping address is required')
-        //     .matches(/^\d{10}$/).withMessage('Phone number in shipping address must be a 10-digit number'),
 
         body("discount")
             .optional()

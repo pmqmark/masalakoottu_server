@@ -4,7 +4,7 @@ exports.genderList = ['male', 'female', 'other']
 
 exports.roleList = ['user', 'admin'];
 
-exports.payModeList = ['COD', 'Credit Card', 'UPI', 'Net Banking'];
+exports.payModeList = ['COD', 'ONLINE'];
 
 exports.payStatusList = ['pending', 'success', 'failed', 'refunded'];
 
