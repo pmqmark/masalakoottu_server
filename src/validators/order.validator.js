@@ -2,7 +2,6 @@ const { body } = require("express-validator");
 const mongoose = require("mongoose");
 const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
 
-// Helper function to check valid MongoDB ObjectId
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
 const orderValidator = {
