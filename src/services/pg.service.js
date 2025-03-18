@@ -1,0 +1,96 @@
+const axios = require("axios");
+const Redis = require("ioredis");
+const redis = new Redis({
+    host: 'redis-12123.crce179.ap-south-1-1.ec2.redns.redis-cloud.com',
+    port: 12123,
+    username: 'default',
+    password: 'uIKJqbnkyzvHPyad06gKcniXCP9oUigZ',
+});
+
+const NODE_ENV = process.env.NODE_ENV;
+const isProduction = NODE_ENV === "production";
+
+const client_id = isProduction ? process.env.prod_client_id : process.env.uat_client_id;
+const client_secret = isProduction ? process.env.prod_client_secret : process.env.uat_client_secret;
+const client_version = isProduction ? process.env.prod_client_version : process.env.uat_client_version;
+const grant_type = isProduction ? process.env.prod_grant_type : process.env.uat_grant_type;
+
+const auth_url = isProduction ? process.env.prod_auth_url : process.env.uat_auth_url
+const base_url = isProduction ? process.env.prod_base_url : process.env.uat_base_url
+
+async function savePhonePeToken(tokenData) {
+    const { access_token, expires_in = 3600 } = tokenData;
+
+console.log({spt: access_token})
+
+    await redis.set(
+        "phonepe_access_token",
+        access_token,
+        "EX",
+        expires_in - 60
+    )
+}
+
+async function fetchPhonePeTokenFromAPI() {
+
+    const params = new URLSearchParams();
+    params.append('client_id', client_id);
+    params.append('client_secret', client_secret);
+    params.append('client_version', client_version);
+    params.append('grant_type', grant_type);
+
+    const response = await axios.post(auth_url,
+        params,
+        {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        }
+    )
+
+    const tokenData = response.data;
+
+    console.log({tokenData})
+
+    await savePhonePeToken(tokenData);
+    console.log("PhonePe token refreshed and stores in redis");
+}
+
+async function getPhonePeToken() {
+    let token = await redis.get("phonepe_access_token");
+
+    if (!token) {
+        console.warn("PhonePe token is missing in redis. Fething a fresh token");
+
+        try {
+            const newTokenData = await fetchPhonePeTokenFromAPI();
+
+            token = newTokenData.access_token;
+
+            await savePhonePeToken(newTokenData);
+
+        } catch (error) {
+            console.error("Failed to fetch PhonePe token:", error.message);
+            throw new Error("PhonePe token unavailable");
+        }
+    }
+
+    console.log({token})
+
+    return token;
+}
+
+
+const phonePeApi = axios.create({
+    baseURL: base_url,
+    timeout: 5000,
+})
+
+phonePeApi.interceptors.request.use(async (config) => {
+    const token = await getPhonePeToken();
+
+    config.headers["Authorization"] = `O-Bearer ${token}`;
+    return config;
+})
+
+module.exports = { phonePeApi }

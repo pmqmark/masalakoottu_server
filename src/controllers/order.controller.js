@@ -96,7 +96,7 @@ exports.checkoutCtrl = async (req, res) => {
         }
 
         const paymentResponse = await onlinePayment(transactionId, user, orderAmount);
-        if (!paymentResponse?.success) {
+        if (paymentResponse?.status !== 200) {
             return res.status(500).json({ success: false, message: 'Failed to initiate payment', error: 'FAILED_PAYMENT_INITIATION' });
         }
 
@@ -106,7 +106,7 @@ exports.checkoutCtrl = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Order placed successfully",
-            data: { instrument_response: paymentResponse?.data?.instrumentResponse }
+            data: { redirectUrl: paymentResponse?.data?.redirectUrl }
         });
 
     } catch (error) {
