@@ -16,6 +16,7 @@ const { discountRouter } = require("./routes/discount.route");
 const { dashboardRouter } = require("./routes/dashboard.route");
 const { bannerRouter } = require("./routes/banner.route");
 const { testimonialRouter } = require("./routes/testimonial.route");
+const { webHookRouter } = require("./routes/webhook.route");
 const PORT = process.env.PORT || 8080
 const ClientURL = process.env.ClientURL;
 const ClientURL2 = process.env.ClientURL2;
@@ -58,6 +59,7 @@ app.use('/api/discounts', discountRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/banners', bannerRouter)
 app.use('/api/testimonials', testimonialRouter)
+app.use('/api/webhook', webHookRouter)
 
 app.use("*", (req, res) => res.status(404).json({
   success: false,

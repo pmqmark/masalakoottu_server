@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
+const { payModeList, payStatusList, orderStatusList, deliveryTypeList, buyModeList } = require("../config/data");
 
 const OrderSchema = new mongoose.Schema(
   {
@@ -9,7 +9,16 @@ const OrderSchema = new mongoose.Schema(
       required: true
     },
 
-    transactionId: { type: String },
+    merchantOrderId: { type: String },
+    pgOrderId: { type: String },
+
+    buyMode: {
+      type: String,
+      enum: buyModeList,
+      required: true
+    },
+
+    couponCode: {type:String},
 
     payStatus: {
       type: String,

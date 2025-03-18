@@ -1,19 +1,9 @@
-const { default: axios } = require("axios");
 const { Order } = require("../models/order.model");
 const { User } = require("../models/user.model");
-const crypto = require("crypto");
 const { orderStatusList } = require("../config/data");
-const moment = require("moment");
 const { phonePeApi } = require("../services/pg.service")
 
-const ServerURL = process.env.ServerURL;
-
-const salt_key = process.env.SALT_KEY;
-const merchant_id = process.env.MERCHANT_ID
-const NODE_ENV = process.env.NODE_ENV;
-const DEV_BASE_URL_PHONEPE = process.env.DEV_BASE_URL_PHONEPE;
-const PROD_BASE_URL_PHONEPE = process.env.PROD_BASE_URL_PHONEPE;
-
+const ClientURL = process.env.ClientURL;
 
 exports.saveOrder = async (obj) => {
     return await Order.create(obj);
@@ -25,58 +15,7 @@ exports.clearCart = async (userId) => {
     }, { new: true })
 }
 
-exports.onlinePayment = async (transactionId, user, amount) => {
-
-    const merchantUserId = "MUID" + Date.now();
-
-    // const phonePeObj = {
-    //     name: `${user?.firstName} ${user?.lastName}`,
-    //     amount: amount,
-    //     number: user?.mobile,
-    //     MUID: merchantUserId,
-    //     transactionId: transactionId
-    // }
-
-    // const data = {
-    //     merchantId: merchant_id,
-    //     merchantTransactionId: transactionId,
-    //     merchantUserId: merchantUserId,
-    //     amount: phonePeObj.amount * 100,
-    //     redirectUrl: `${ServerURL}/orders/check-pay-status/${transactionId}`,
-    //     redirectMode: 'POST',
-    //     callbackUrl: `${ServerURL}/orders/check-pay-status/${transactionId}`,
-    //     mobileNumber: phonePeObj.number,
-    //     paymentInstrument: {
-    //         type: 'PAY_PAGE'
-    //     }
-    // };
-
-    // const payload = JSON.stringify(data);
-    // const payloadMain = Buffer.from(payload).toString('base64');
-    // const keyIndex = 1;
-    // const string = payloadMain + '/pg/v1/pay' + salt_key;
-    // const sha256 = crypto.createHash('sha256').update(string).digest('hex');
-    // const checksum = sha256 + '###' + keyIndex;
-
-    // const CURRENT_URL = NODE_ENV === "development" ? `${DEV_BASE_URL_PHONEPE}pay` : `${PROD_BASE_URL_PHONEPE}pay`;
-
-    // const options = {
-    //     method: 'POST',
-    //     url: CURRENT_URL,
-    //     headers: {
-    //         accept: 'application/json',
-    //         'Content-Type': 'application/json',
-    //         'X-VERIFY': checksum
-    //     },
-    //     data: {
-    //         request: payloadMain
-    //     }
-    // };
-
-    // const response = await axios.request(options);
-    const prefix = 'ORDID';
-    const value = moment().add(10, 'seconds').unix();
-    const merchantOrderId = `${prefix}${value}`;
+exports.onlinePayment = async (merchantOrderId, user, amount) => {
 
     const payload = {
         "merchantOrderId": `${merchantOrderId}`,
@@ -91,12 +30,13 @@ exports.onlinePayment = async (transactionId, user, amount) => {
             "type": "PG_CHECKOUT",
             "message": "Payment message used for collect requests",
             "merchantUrls": {
-                "redirectUrl": "https://www.phonepe.com/"
+                "redirectUrl": ClientURL
             }
         }
     }
 
-    const response = await phonePeApi.post("checkout/v2/pay", payload)
+    // Initiate Payment
+    const response = await phonePeApi.post("/checkout/v2/pay", payload)
     console.log(response)
 
     return response;
@@ -104,29 +44,6 @@ exports.onlinePayment = async (transactionId, user, amount) => {
 
 
 exports.checkPayStatusWithPhonepeAPI = async (merchantTransactionId) => {
-    const merchantId = merchant_id
-
-    const keyIndex = 1;
-    const string = `/pg/v1/status/${merchantId}/${merchantTransactionId}` + salt_key;
-    const sha256 = crypto.createHash('sha256').update(string).digest('hex');
-    const checksum = sha256 + "###" + keyIndex;
-
-    const CURRENT_URL = NODE_ENV === development
-        ? `${DEV_BASE_URL_PHONEPE}status/${merchantId}/${merchantTransactionId}`
-        : `${PROD_BASE_URL_PHONEPE}status/${merchantId}/${merchantTransactionId}`;
-
-    const options = {
-        method: 'GET',
-        url: CURRENT_URL,
-        headers: {
-            accept: 'application/json',
-            'Content-Type': 'application/json',
-            'X-VERIFY': checksum,
-            'X-MERCHANT-ID': `${merchantId}`
-        }
-    };
-
-    return await axios.request(options);
 
 }
 
@@ -136,8 +53,8 @@ exports.updateOrder = async (id, updateObj) => {
     }, { new: true })
 }
 
-exports.getOrderByTxnId = async (transactionId) => {
-    return await Order.findOne({ transactionId }).lean()
+exports.getOrderByMOId = async (merchantOrderId) => {
+    return await Order.findOne({ merchantOrderId }).lean()
 }
 
 exports.getOrderById = async (id) => {
@@ -176,10 +93,6 @@ exports.orderStatusAndCountHandler = async () => {
     ))
 
     const countArr = await Promise.all(dbqueries)
-
-    // const statusVsCount = orderStatusList.map((item, index) => (
-    //     { [item]: countArr[index] }
-    // ))
 
     return {
         statuses: orderStatusList,

@@ -4,6 +4,7 @@ const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI,
 const { decrementProductQty, getBuyNowItem } = require("../services/product.service");
 const { getCart, getUserById } = require("../services/user.service");
 const { calculateDiscount, addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
+const moment = require("moment");
 
 const ClientURL = process.env.ClientURL;
 
@@ -61,13 +62,19 @@ exports.checkoutCtrl = async (req, res) => {
             if (typeof couponDiscountAmt === "number" && couponDiscountAmt > 0) {
                 discountAmount += couponDiscountAmt
             }
+
         }
 
         const orderAmount = amount + Math.max(0, deliveryCharge) - discountAmount;
-        const transactionId = "Masalakoottu_T" + Date.now();
+
+        const prefix = 'ORDID';
+        const value = moment().add(10, 'seconds').unix();
+        const merchantOrderId = `${prefix}${value}`;
 
         const orderObj = {
             payMode,
+            buyMode,
+            couponCode,
             amount: orderAmount,
             items,
             userId,
@@ -76,7 +83,7 @@ exports.checkoutCtrl = async (req, res) => {
             discount: discountAmount,
             deliveryType,
             deliveryCharge,
-            transactionId
+            merchantOrderId
         };
 
         const order = await saveOrder(orderObj);
@@ -84,25 +91,22 @@ exports.checkoutCtrl = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Failed to save Order', error: 'INTERNAL_SERVER_ERROR' });
         }
 
-        if (couponCode) {
-            await addUserIdToCoupon(couponCode, userId);
-        }
-
         if (payMode === 'COD') {
+
+            if (couponCode) {
+                await addUserIdToCoupon(couponCode, userId);
+            }
+
             await decrementProductQty(items);
             if (buyMode === "later") await clearCart(userId);
 
             return res.status(201).json({ success: true, message: "Order placed successfully", data: { order } });
         }
 
-        const paymentResponse = await onlinePayment(transactionId, user, orderAmount);
+        const paymentResponse = await onlinePayment(merchantOrderId, user, orderAmount);
         if (paymentResponse?.status !== 200) {
             return res.status(500).json({ success: false, message: 'Failed to initiate payment', error: 'FAILED_PAYMENT_INITIATION' });
         }
-
-        // move the below 2 line of code after to wherever the payment is done;
-        await decrementProductQty(items);
-        if (buyMode === "later") await clearCart(userId);
 
         return res.status(200).json({
             success: true,
@@ -112,46 +116,18 @@ exports.checkoutCtrl = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ 
-            success: false, 
-            message: error?.message ?? "Internal Server Error", 
-            error: 'INTERNAL_SERVER_ERROR' });
+        return res.status(500).json({
+            success: false,
+            message: error?.message ?? "Internal Server Error",
+            error: 'INTERNAL_SERVER_ERROR'
+        });
     }
 };
 
 
 exports.checkPaymentStatusCtrl = async (req, res) => {
     try {
-        const merchantTransactionId = req.params.txnId
-
-        console.log({ merchantTransactionId })
-
-        if (!merchantTransactionId) {
-            return res.redirect(`${ClientURL}/checkout`);
-        }
-
-        const order = await getOrderByTxnId(merchantTransactionId)
-
-        if (!order || !order?.userId) {
-            return res.redirect(`${ClientURL}/checkout`);
-        }
-
-        const response = await checkPayStatusWithPhonepeAPI(merchantTransactionId);
-
-        console.log("response check", response?.data)
-
-        if (response?.data.success === true && response?.data.code === 'PAYMENT_SUCCESS') {
-
-            const updatedOrder = await updateOrder(order?._id, { payStatus: 'success' })
-
-            console.log('Order payStatus updated successfully:', updatedOrder);
-
-            return res.redirect(`${ClientURL}/profile#order`)
-        }
-        else {
-            console.log({ "Failed Payment , merchantTransactionId: ": merchantTransactionId })
-            return res.redirect(`${ClientURL}/checkout`)
-        }
+       
     } catch (error) {
         console.error(error);
         return res.redirect(`${ClientURL}/checkout`)

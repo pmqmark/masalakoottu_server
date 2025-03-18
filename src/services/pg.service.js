@@ -1,10 +1,10 @@
 const axios = require("axios");
 const Redis = require("ioredis");
 const redis = new Redis({
-    host: 'redis-12123.crce179.ap-south-1-1.ec2.redns.redis-cloud.com',
-    port: 12123,
-    username: 'default',
-    password: 'uIKJqbnkyzvHPyad06gKcniXCP9oUigZ',
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+    username: process.env.REDIS_USERNAME,
+    password: process.env.REDIS_PASSWORD,
 });
 
 const NODE_ENV = process.env.NODE_ENV;
@@ -21,7 +21,7 @@ const base_url = isProduction ? process.env.prod_base_url : process.env.uat_base
 async function savePhonePeToken(tokenData) {
     const { access_token, expires_in = 3600 } = tokenData;
 
-console.log({spt: access_token})
+    console.log({ spt: access_token })
 
     await redis.set(
         "phonepe_access_token",
@@ -32,7 +32,6 @@ console.log({spt: access_token})
 }
 
 async function fetchPhonePeTokenFromAPI() {
-
     const params = new URLSearchParams();
     params.append('client_id', client_id);
     params.append('client_secret', client_secret);
@@ -50,10 +49,12 @@ async function fetchPhonePeTokenFromAPI() {
 
     const tokenData = response.data;
 
-    console.log({tokenData})
+    console.log({ tokenData })
 
     await savePhonePeToken(tokenData);
     console.log("PhonePe token refreshed and stores in redis");
+
+    return tokenData
 }
 
 async function getPhonePeToken() {
@@ -65,7 +66,7 @@ async function getPhonePeToken() {
         try {
             const newTokenData = await fetchPhonePeTokenFromAPI();
 
-            token = newTokenData.access_token;
+            token = newTokenData?.access_token;
 
             await savePhonePeToken(newTokenData);
 
@@ -75,7 +76,7 @@ async function getPhonePeToken() {
         }
     }
 
-    console.log({token})
+    console.log({ token })
 
     return token;
 }
