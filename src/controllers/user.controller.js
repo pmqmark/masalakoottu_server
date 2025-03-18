@@ -151,7 +151,7 @@ exports.getUserProfileByIdCtrl = async (req, res, next) => {
             throw new Error('FAILED')
         }
 
-        const {password, ...userInfo} = user
+        const { password, ...userInfo } = user
 
         const filters = { userId }
 
@@ -278,7 +278,7 @@ exports.updateUserCtrl = async (req, res, next) => {
         }
 
         if (password?.trim()) {
-            console.log({password})
+            console.log({ password })
 
             const hashedPassword = await hashPassword(password)
             updateObj.password = hashedPassword
@@ -483,7 +483,9 @@ exports.addToCartCtrl = async (req, res) => {
             })
         }
 
-        const cart = await addToCart(userId, productId, quantity, variations);
+        await addToCart(userId, productId, quantity, variations);
+
+        const cart = await getCart(userId)
 
         return res.status(200).json({
             success: true,

@@ -100,6 +100,7 @@ exports.checkoutCtrl = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Failed to initiate payment', error: 'FAILED_PAYMENT_INITIATION' });
         }
 
+        // move the below 2 line of code after to wherever the payment is done;
         await decrementProductQty(items);
         if (buyMode === "later") await clearCart(userId);
 
