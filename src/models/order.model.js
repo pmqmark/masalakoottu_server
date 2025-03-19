@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { payModeList, payStatusList, orderStatusList, deliveryTypeList, buyModeList } = require("../config/data");
+const { payModeList, payStatusList, orderStatusList, deliveryTypeList, buyModeList, refundStatusList } = require("../config/data");
 
 const OrderSchema = new mongoose.Schema(
   {
@@ -9,8 +9,14 @@ const OrderSchema = new mongoose.Schema(
       required: true
     },
 
+    transactionId: { type: String },
+
+    refundTransactionId: { type: String },
+
     merchantOrderId: { type: String, required: true },
     pgOrderId: { type: String },
+
+    merchantRefundId: { type: String },
 
     buyMode: {
       type: String,
@@ -26,6 +32,12 @@ const OrderSchema = new mongoose.Schema(
       default: 'pending'
     },
 
+    refundStatus: {
+      type: String,
+      enum: refundStatusList,
+      default: 'none'
+    },
+
     status: {
       type: String,
       enum: orderStatusList,
@@ -33,6 +45,8 @@ const OrderSchema = new mongoose.Schema(
     },
 
     amount: { type: Number, required: true },
+    refundAmount: { type: Number },
+
     orderDate: { type: Date, default: Date.now, index: true },
     expectedDelivery: { type: Date, default: () => Date.now() + 7 * 24 * 60 * 60 * 1000 }, // 7 Days 
 

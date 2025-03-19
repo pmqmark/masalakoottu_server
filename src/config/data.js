@@ -17,3 +17,5 @@ exports.enquiryTypeList = ['Contact']
 exports.discountTypeList = ["percentage", "fixed"]
 
 exports.buyModeList = ['later', 'now'];
+
+exports.refundStatusList = ['none', 'requested', 'accepted', 'in_process', 'completed', 'failed'] 

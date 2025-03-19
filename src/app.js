@@ -50,6 +50,7 @@ app.use(cors(corsOptions));
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+app.use('/api/webhook', webHookRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/categories', categoryRouter) 
 app.use('/api/enquiries', enquiryRouter) 
@@ -61,7 +62,6 @@ app.use('/api/discounts', discountRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/banners', bannerRouter)
 app.use('/api/testimonials', testimonialRouter)
-app.use('/api/webhook', webHookRouter)
 
 app.use("*", (req, res) => res.status(404).json({
   success: false,
