@@ -1,7 +1,9 @@
 const { isValidObjectId } = require("mongoose");
 const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
-const { saveOrder, onlinePayment, updateOrder, findManyOrders, getOrderById, 
-    cancelMyOrder, returnMyOrder, clearCart, checkOrderPayStatusWithPG } = require("../services/order.service");
+const { saveOrder, onlinePayment, updateOrder, findManyOrders, getOrderById,
+    cancelMyOrder, returnMyOrder, clearCart, checkOrderPayStatusWithPG,
+    sendRefundRequestToPhonepe,
+    fetchRefundStatusFromPhonepe } = require("../services/order.service");
 const { decrementProductQty, getBuyNowItem } = require("../services/product.service");
 const { getCart, getUserById } = require("../services/user.service");
 const { addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
@@ -393,6 +395,117 @@ exports.returnMyOrderCtrl = async (req, res) => {
             success: true,
             message: "success",
             data: { order: returnedOrder },
+            error: null,
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+exports.refundRequestToPGCtrl = async (req, res) => {
+    try {
+        const { orderId, amount } = req.body;
+
+        const order = await getOrderById(orderId)
+
+        if (!order) {
+            return res.status(400).json({
+                success: false,
+                message: "Order not found",
+                data: null,
+                error: "NOT_FOUND"
+            })
+        }
+
+        const prefix = 'RFDID';
+        const value = moment().add(10, 'seconds').unix();
+        const merchantRefundId = `${prefix}${value}`;
+
+        const postObj = {
+            merchantRefundId: merchantRefundId,
+        }
+
+        if (order?.merchantOrderId) {
+            postObj.originalMerchantOrderId = order?.merchantOrderId
+        }
+
+        // if an amount is specified in req use it else use order amount
+        if (amount && !isNaN(amount)) {
+            postObj.amount = amount
+        }
+        else {
+            postObj.amount = order?.amount;
+        }
+
+        const response = await sendRefundRequestToPhonepe(postObj)
+
+        console.log({ response })
+
+        if (response.status === 200) {
+            const refundId = response?.data?.refundId;
+            await updateOrder(orderId, { refundId })
+        }
+        else {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to send refund request to PG",
+                data: null,
+                error: null,
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "success",
+            data: { result: response?.data },
+            error: null,
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+
+exports.getRefundStatusCtrl = async (req, res) => {
+    try {
+        const { merchantRefundId } = req.params;
+
+        if (!merchantRefundId?.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Merchant refund Id",
+                data: null,
+                error: "BAD_REQUEST",
+            })
+        }
+
+        const response = await fetchRefundStatusFromPhonepe(merchantRefundId)
+
+        if (response.status !== 200) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to fetch refund status from PG",
+                data: null,
+                error: null,
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "success",
+            data: { result: response?.data },
             error: null,
         })
     } catch (error) {

@@ -101,3 +101,16 @@ exports.orderStatusAndCountHandler = async () => {
         counts: countArr
     }
 }
+
+
+exports.sendRefundRequestToPhonepe = async (postObj) => {
+    const response = await phonePeApi.post("/payments/v2/refund", postObj)
+
+    return response
+}
+
+exports.fetchRefundStatusFromPhonepe = async (merchantRefundId) => {
+    const response = await phonePeApi.get(`/payments/v2/refund/${merchantRefundId}/status`)
+
+    return response
+}

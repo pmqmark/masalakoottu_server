@@ -17,6 +17,7 @@ const OrderSchema = new mongoose.Schema(
     pgOrderId: { type: String },
 
     merchantRefundId: { type: String },
+    pgRefundId: { type: String },
 
     buyMode: {
       type: String,
