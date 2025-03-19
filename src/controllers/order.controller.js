@@ -412,14 +412,23 @@ exports.refundRequestToPGCtrl = async (req, res) => {
     try {
         const { orderId, amount } = req.body;
 
-        const order = await getOrderById(orderId)
-
-        if (!order) {
+        if (!isValidObjectId(orderId)) {
             return res.status(400).json({
                 success: false,
-                message: "Order not found",
+                message: "Invalid Id",
                 data: null,
-                error: "NOT_FOUND"
+                error: "INVALID_ID"
+            })
+        }
+
+        const order = await getOrderById(orderId)
+
+        if (!order || order?.payStatus !== "completed") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Order",
+                data: null,
+                error: "BAD_REQUEST"
             })
         }
 
