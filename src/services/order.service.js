@@ -43,8 +43,10 @@ exports.onlinePayment = async (merchantOrderId, user, amount) => {
 }
 
 
-exports.checkPayStatusWithPhonepeAPI = async (merchantTransactionId) => {
+exports.checkOrderPayStatusWithPG = async (merchantOrderId) => {
+    const response = await phonePeApi.get(`/checkout/v2/order/${merchantOrderId}/status`)
 
+    return response
 }
 
 exports.updateOrder = async (id, updateObj) => {

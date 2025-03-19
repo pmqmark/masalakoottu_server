@@ -1,9 +1,10 @@
 const { isValidObjectId } = require("mongoose");
 const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = require("../config/data");
-const { saveOrder, onlinePayment, getOrderByTxnId, checkPayStatusWithPhonepeAPI, updateOrder, findManyOrders, getOrderById, cancelMyOrder, returnMyOrder, clearCart } = require("../services/order.service");
+const { saveOrder, onlinePayment, updateOrder, findManyOrders, getOrderById, 
+    cancelMyOrder, returnMyOrder, clearCart, checkOrderPayStatusWithPG } = require("../services/order.service");
 const { decrementProductQty, getBuyNowItem } = require("../services/product.service");
 const { getCart, getUserById } = require("../services/user.service");
-const { calculateDiscount, addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
+const { addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
 const moment = require("moment");
 
 const ClientURL = process.env.ClientURL;
@@ -125,12 +126,36 @@ exports.checkoutCtrl = async (req, res) => {
 };
 
 
-exports.checkPaymentStatusCtrl = async (req, res) => {
+exports.checkOrderPayStatusCtrl = async (req, res) => {
     try {
-       
+        const { orderId } = req.params;
+        const order = await getOrderById(orderId);
+
+        const response = await checkOrderPayStatusWithPG(order?.merchantOrderId)
+
+        if (!response) {
+            return res.status(500).json({
+                success: false,
+                message: "failed",
+                data: null,
+                error: null,
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "success",
+            data: { response },
+            error: null,
+        })
     } catch (error) {
-        console.error(error);
-        return res.redirect(`${ClientURL}/checkout`)
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
     }
 }
 
