@@ -1,11 +1,5 @@
 const axios = require("axios");
-const Redis = require("ioredis");
-const redis = new Redis({
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
-    username: process.env.REDIS_USERNAME,
-    password: process.env.REDIS_PASSWORD,
-});
+const redis = require("../config/redis")
 
 const NODE_ENV = process.env.NODE_ENV;
 const isProduction = NODE_ENV === "production";
@@ -54,7 +48,6 @@ async function fetchPhonePeTokenFromAPI() {
     await savePhonePeToken(tokenData);
     console.log("PhonePe token refreshed and stores in redis");
 
-    return tokenData
 }
 
 async function getPhonePeToken() {
@@ -64,11 +57,10 @@ async function getPhonePeToken() {
         console.warn("PhonePe token is missing in redis. Fething a fresh token");
 
         try {
-            const newTokenData = await fetchPhonePeTokenFromAPI();
+          
+            await fetchPhonePeTokenFromAPI();
 
-            token = newTokenData?.access_token;
-
-            await savePhonePeToken(newTokenData);
+            token = await redis.get("phonepe_access_token");
 
         } catch (error) {
             console.error("Failed to fetch PhonePe token:", error.message);
@@ -91,7 +83,8 @@ phonePeApi.interceptors.request.use(async (config) => {
     const token = await getPhonePeToken();
 
     config.headers["Authorization"] = `O-Bearer ${token}`;
+
     return config;
 })
 
-module.exports = { phonePeApi }
+module.exports = { phonePeApi , fetchPhonePeTokenFromAPI}

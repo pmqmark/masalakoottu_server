@@ -26,7 +26,7 @@ exports.phonepeWebhookHandler = async (req, res) => {
         if (event === "checkout.order.completed" && payload.state === "COMPLETED") {
             console.log({ payload })
 
-            const { merchantOrderId } = payload;
+            const { merchantOrderId, orderId } = payload;
             const order = await getOrderByMOId(merchantOrderId);
 
             if (!order) {
@@ -40,7 +40,7 @@ exports.phonepeWebhookHandler = async (req, res) => {
 
             const { _id, couponCode, userId, items, buyMode } = order
 
-            await updateOrder(_id, { payStatus: 'completed' })
+            await updateOrder(_id, { payStatus: 'completed', pgOrderId: orderId })
 
             if (couponCode) {
                 await addUserIdToCoupon(couponCode, userId);

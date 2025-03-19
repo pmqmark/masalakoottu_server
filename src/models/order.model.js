@@ -9,7 +9,7 @@ const OrderSchema = new mongoose.Schema(
       required: true
     },
 
-    merchantOrderId: { type: String },
+    merchantOrderId: { type: String, required: true },
     pgOrderId: { type: String },
 
     buyMode: {
@@ -18,7 +18,7 @@ const OrderSchema = new mongoose.Schema(
       required: true
     },
 
-    couponCode: {type:String},
+    couponCode: { type: String },
 
     payStatus: {
       type: String,
