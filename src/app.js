@@ -22,6 +22,7 @@ const { startRefreshPgTokenJob } = require("./crons/refreshPgToken.cron");
 const PORT = process.env.PORT || 8080
 const ClientURL = process.env.ClientURL;
 const ClientURL2 = process.env.ClientURL2;
+const ClientURL3 = process.env.ClientProductionURL;
 
 connectDB();
 
@@ -34,7 +35,7 @@ const corsOptions = {
       callback(null, true);
 
     } else {
-      const allowedOrigins = [ClientURL, ClientURL2];
+      const allowedOrigins = [ClientURL, ClientURL2, ClientURL3];
 
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
@@ -52,9 +53,9 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use('/api/webhook', webHookRouter)
 app.use('/api/auth', authRouter)
-app.use('/api/categories', categoryRouter) 
-app.use('/api/enquiries', enquiryRouter) 
-app.use('/api/orders', orderRouter) 
+app.use('/api/categories', categoryRouter)
+app.use('/api/enquiries', enquiryRouter)
+app.use('/api/orders', orderRouter)
 app.use('/api/products', productRouter)
 app.use('/api/uploads', uploadRouter)
 app.use('/api/users', userRouter)
