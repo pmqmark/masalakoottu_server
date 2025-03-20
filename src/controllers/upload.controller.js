@@ -5,11 +5,19 @@ const Bucket = process.env.DO_SPACES_BUCKET;
 exports.uploadSingleFile = (req, res) => {
     upload.single('file')(req, res, (err) => {
         if (err) {
-            return res.status(500).json({ msg: 'File upload failed', error: err.message });
+            return res.status(500).json({
+                success: false,
+                message: 'File upload failed',
+                data: null,
+                error: err.message
+            });
         }
 
         if (!req.file) {
-            return res.status(400).json({ msg: 'No file provided' });
+            return res.status(400).json({
+                success: false,
+                message: 'No file provided',
+            });
         }
 
         const file = {
@@ -20,8 +28,10 @@ exports.uploadSingleFile = (req, res) => {
         }
 
         return res.status(200).json({
-            msg: 'File uploaded successfully',
-            file
+            success: true,
+            message: 'File uploaded successfully',
+            data: { file },
+            error: null
         });
     });
 };
@@ -29,11 +39,21 @@ exports.uploadSingleFile = (req, res) => {
 exports.uploadMultipleFile = (req, res) => {
     upload.array('files')(req, res, (err) => {
         if (err) {
-            return res.status(500).json({ msg: 'File upload failed', error: err.message });
+            return res.status(500).json({
+                error: err.message,
+                success: true,
+                message: 'File upload failed',
+                data: null,
+            });
         }
 
         if (!req.files) {
-            return res.status(400).json({ msg: 'No file provided' });
+            return res.status(400).json({
+                error: err.message,
+                success: true,
+                message: 'No file provided',
+                data: null,
+            });
         }
 
         const files = [];
@@ -48,10 +68,11 @@ exports.uploadMultipleFile = (req, res) => {
             files.push(temp)
         }
 
-
         return res.status(200).json({
-            msg: 'Files uploaded successfully',
-            files
+            success: true,
+            message: 'Files uploaded successfully',
+            data: { files },
+            error: null
         });
     });
 };

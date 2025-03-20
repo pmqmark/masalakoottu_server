@@ -4,12 +4,12 @@ const { deleteMultipleFilesFromDO, deleteFileFromDO } = require("../utils/storag
 
 exports.createProductCtrl = async (req, res) => {
     try {
-        const { name, description, brand, price, images,
+        const { name, description, brand, price,thumbnail, images,
             stock, reviews, variations, isFeatured, tags, isArchived
         } = req.body;
 
         const createObj = {
-            name, description, brand, price, images,
+            name, description, brand, price, thumbnail, images,
             stock, reviews, variations, isFeatured, tags, isArchived
         }
 
