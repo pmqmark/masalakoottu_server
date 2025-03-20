@@ -4,11 +4,11 @@ const { deleteFileFromDO } = require("../utils/storage.util");
 
 exports.createCategoryCtrl = async (req, res) => {
     try {
-        const { name, description,
+        const { name, description,productIds,
             image, isArchived } = req.body;
 
         const createObj = {
-            name, description,
+            name, description,productIds,
             image, isArchived
         }
 
