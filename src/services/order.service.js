@@ -65,7 +65,9 @@ exports.getOrderById = async (id) => {
 
 
 exports.findManyOrders = async (filters) => {
-    return await Order.find(filters).sort({ createdAt: -1 })
+    return await Order.find(filters)
+    .populate("userId", "firstName lastName email mobile")
+    .sort({ createdAt: -1 })
 }
 
 

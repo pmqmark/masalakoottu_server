@@ -27,6 +27,6 @@ const categorySchema = new mongoose.Schema({
         { type: mongoose.Schema.Types.ObjectId, ref: 'Product' }
     ]
 
-});
+}, {timestamps:true});
 
 exports.Category = mongoose.model('Category', categorySchema);
