@@ -35,7 +35,7 @@ exports.getUserById = async (id) => {
 }
 
 exports.getManyUsers = async (filters) => {
-    return await User.find(filters);
+    return await User.find(filters, {password:0, cart:0});
 }
 
 exports.updateUser = async (id, updateObj) => {

@@ -37,7 +37,6 @@ const UserSchema = new Schema({
     password: {
         type: String,
     },
-    // addresses: [{ type: Schema.Types.ObjectId, ref: 'Address' }],
 
     wishlist: [
         {
@@ -66,7 +65,7 @@ const UserSchema = new Schema({
         },
     ],
 
-    orderHistory: [{ type: Schema.Types.ObjectId, ref: 'Order' }],
+    // orderHistory: [{ type: Schema.Types.ObjectId, ref: 'Order' }],
 
     role: { type: String, default: 'user', enum: roleList },
 
