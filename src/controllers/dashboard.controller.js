@@ -6,6 +6,7 @@ const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc.js');
 const timezone = require('dayjs/plugin/timezone.js');
 const { User } = require("../models/user.model");
+const { Order } = require("../models/order.model");
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -130,6 +131,174 @@ exports.getUserAddedCount = async (req, res) => {
             error: null
         })
 
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: 'INTERNAL_SERVER_ERROR' });
+    }
+}
+
+
+exports.getBestSellingProducts = async (req, res) => {
+    try {
+        const thirtyDaysAgo = dayjs().subtract(30, 'day').startOf('day').toDate();
+
+        const bestSellingProducts = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: thirtyDaysAgo }
+                }
+            },
+
+            {
+                $unwind: "$items"
+            },
+
+            {
+                $group: {
+                    _id: "$items.productId",
+                    totalQuantity: { $sum: "$items.quantity" }
+                }
+            },
+
+            {
+                $sort: { totalQuantity: -1 }
+            },
+
+            {
+                $limit: 10
+            },
+
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+
+            {
+                $unwind: "$product"
+            },
+
+            {
+                $project: {
+                    _id: 0,
+                    productId: "$_id",
+                    productName: "$product.name",
+                    totalQuantity: 1,
+                    thumbnail: "$product.thumbnail",
+                    price: "$product.price"
+                }
+            }
+        ])
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: {
+                result: bestSellingProducts
+            },
+            error: null
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: 'INTERNAL_SERVER_ERROR' });
+    }
+}
+
+
+exports.getSaleAnalytics = async (req, res) => {
+    try {
+        const past12Months = dayjs().subtract(11, 'months').startOf('month').toDate();
+
+        const deliveredPipeline = [
+            {
+                $match: {
+                    status: 'delivered',
+                    orderDate: { $gte: past12Months }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$orderDate" },
+                        month: { $month: "$orderDate" }
+                    },
+                    totalRevenue: { $sum: "$amount" }
+                }
+            },
+            {
+                $sort: { "_id.year": 1, "_id.month": 1 }
+            }
+        ]
+
+        const cancelledPipeline = [
+            {
+                $match: {
+                    status: 'cancelled',
+                    orderDate: { $gte: past12Months }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$orderDate" },
+                        month: { $month: "$orderDate" }
+                    },
+                    totalLoss: { $sum: "$amount" }
+                }
+            },
+            {
+                $sort: { "_id.year": 1, "_id.month": 1 }
+            }
+        ]
+
+        const deliveredChart = await Order.aggregate(deliveredPipeline)
+        const cancelledChart = await Order.aggregate(cancelledPipeline)
+
+        const months = Array.from({ length: 12 }, (_, i) => {
+            const date = dayjs().subtract(11 - i, 'months');
+            return { label: date.format('MMM'), monthNumber: date.month() + 1 };
+        });
+
+        const formatChart = (data, key) => {
+            return months.map(({ label, monthNumber }) => {
+                const entry = data.find(d => d._id.month === monthNumber);
+                return {
+                    x: label,
+                    y: entry ? entry[key] : 0
+                };
+            });
+        };
+
+        const categories = months?.map((item) => item.label)
+
+        const deliveredFormatted = formatChart(deliveredChart, 'totalRevenue');
+        const cancelledFormatted = formatChart(cancelledChart, 'totalLoss');
+
+        const series = [
+            {
+                name: "Sales",
+                data: deliveredFormatted
+            },
+            {
+                name: "Loss",
+                data: cancelledFormatted
+            },
+        ]
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: {
+                result: {
+                    categories,
+                    series
+                }
+            },
+            error: null
+        })
     } catch (error) {
         console.error(error);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: 'INTERNAL_SERVER_ERROR' });
