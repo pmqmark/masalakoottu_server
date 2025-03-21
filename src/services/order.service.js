@@ -2,7 +2,6 @@ const { Order } = require("../models/order.model");
 const { User } = require("../models/user.model");
 const { orderStatusList } = require("../config/data");
 const { phonePeApi } = require("../services/pg.service");
-const { populate } = require("dotenv");
 
 const ClientURL = process.env.ClientURL;
 
@@ -61,15 +60,20 @@ exports.getOrderByMOId = async (merchantOrderId) => {
 }
 
 exports.getOrderById = async (id) => {
-    return await Order.findById(id).lean()
+    return await Order.findById(id)
+        .populate("userId", "firstName lastName email mobile")
+        .populate("billAddress")
+        .populate("shipAddress")
+        .lean()
 }
 
 
-exports.findManyOrders = async (filters={}, project={}) => {
+exports.findManyOrders = async (filters = {}, project = {}) => {
     return await Order.find(filters, project)
-    .populate("userId", "firstName lastName email mobile")
-    // .populate("items.productId", "name price thumbnail")
-    .sort({ createdAt: -1 })
+        .populate("userId", "firstName lastName email mobile")
+        .populate("billAddress")
+        .populate("shipAddress")
+        .sort({ createdAt: -1 })
 }
 
 
