@@ -3,12 +3,14 @@ const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, get
     getUserByEmail, addToCart, removeFromCart, getCart, removeFromWishlist, getWishlist,
     addToWishlist, createAddress, updateAddress, deleteAddress, fetchManyAddress,
     fetchSingleAddress,
-    updateCart } = require("../services/user.service");
+    updateCart,
+    fetchOneAddress } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
 const { genderList, roleList } = require("../config/data");
 const { checkIfVariationExists } = require("../services/product.service");
+const { findManyOrders } = require("../services/order.service");
 
 // Accessible to Public
 exports.registerUserCtrl = async (req, res) => {
@@ -385,6 +387,8 @@ exports.getUserByIdCtrl = async (req, res, next) => {
         }
 
         const user = await getUserById(id)
+        const address = await fetchOneAddress({ userId: user?._id })
+        const orderHistory = await findManyOrders({ userId: user?._id })
 
         if (!user) {
             throw new Error('User not found')
@@ -393,7 +397,7 @@ exports.getUserByIdCtrl = async (req, res, next) => {
         return res.status(201).json({
             success: true,
             message: 'success',
-            data: { user },
+            data: { user, address, orderHistory },
             error: null
         })
 
