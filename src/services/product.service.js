@@ -8,12 +8,14 @@ exports.createProduct = async (obj = {}) => {
 
 exports.getProductById = async (id) => {
     return await Product.findById(id)
+    .populate("reviews.userId", "firstName lastName")
     .populate("variations.variationId", "name")
     .populate("variations.options.optionId", "value")
 }
 
 exports.getManyProducts = async (filters = {}, project ={}) => {
     return await Product.find(filters, project)
+    .populate("reviews.userId", "firstName lastName")
     .populate("variations.variationId", "name")
     .populate("variations.options.optionId", "value")
 }

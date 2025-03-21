@@ -387,7 +387,7 @@ exports.getUserByIdCtrl = async (req, res, next) => {
         const user = await getUserById(id)
 
         if (!user) {
-            throw new Error('FAILED')
+            throw new Error('User not found')
         }
 
         return res.status(201).json({
@@ -401,7 +401,7 @@ exports.getUserByIdCtrl = async (req, res, next) => {
         console.error(error)
         res.status(500).json({
             success: false,
-            message: "Internal Server error",
+            message: error?.message || "Internal Server error",
             data: null,
             error: 'INTERNAL_SERVER_ERROR'
         })

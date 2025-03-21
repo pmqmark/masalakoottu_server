@@ -5,11 +5,14 @@ exports.createCategory = async(obj)=>{
 }
 
 exports.getCategoryById = async (id) => {
-    return await Category.findById(id);
+    return await Category.findById(id)
+    .populate("productIds", "name price thumbnail")
 }
 
 exports.getManyCategories = async (filters = {}) => {
-    return await Category.find(filters);
+    return await Category.find(filters)
+    .populate("productIds", "name price thumbnail")
+
 }
 
 exports.updateCategory = async (id, obj = {}) => {

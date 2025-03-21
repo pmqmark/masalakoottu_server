@@ -6,10 +6,14 @@ exports.createTestimonial = async (obj) => {
 
 exports.getTestimonialById = async (id) => {
     return await Testimonial.findById(id)
+    .populate("userId", "firstName lastName")
+
 }
 
 exports.getManyTestimonials = async (filters) => {
     return await Testimonial.find(filters)
+    .populate("userId", "firstName lastName")
+    
 }
 
 exports.updateTestimonial = async (id, obj) => {

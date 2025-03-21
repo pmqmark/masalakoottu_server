@@ -31,7 +31,7 @@ exports.getUserByGoogleId = async (sub) => {
 }
 
 exports.getUserById = async (id) => {
-    return await User.findById(id).lean();
+    return await User.findById(id, {password:0, cart:0}).lean();
 }
 
 exports.getManyUsers = async (filters) => {

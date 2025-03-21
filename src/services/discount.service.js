@@ -7,10 +7,14 @@ exports.createDiscount = async (obj) => {
 
 exports.getDiscounts = async (filters, projects) => {
     return await Discount.find(filters, projects)
+    .populate("applicableProducts", "name price thumbnail")
+    .populate("applicableCategories", "name image")
 }
 
 exports.getDiscountsById = async (id) => {
-    return await Discount.findById(id)
+    return await Discount.findById(id, {usedBy: 0})
+    .populate("applicableProducts", "name price thumbnail")
+    .populate("applicableCategories", "name image")
 }
 
 exports.updateDiscount = async (id, obj) => {
