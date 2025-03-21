@@ -12,8 +12,8 @@ exports.getProductById = async (id) => {
     .populate("variations.options.optionId", "value")
 }
 
-exports.getManyProducts = async (filters = {}) => {
-    return await Product.find(filters)
+exports.getManyProducts = async (filters = {}, project ={}) => {
+    return await Product.find(filters, project)
     .populate("variations.variationId", "name")
     .populate("variations.options.optionId", "value")
 }
