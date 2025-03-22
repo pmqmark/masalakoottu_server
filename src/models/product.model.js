@@ -18,6 +18,18 @@ const productSchema = new Schema(
       required: true,
     },
 
+    hsn: {
+      type: String,
+      trim: true
+    },
+
+    tax: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+
     thumbnail: {
       location: {
         type: String,
@@ -102,6 +114,7 @@ const productSchema = new Schema(
       type: Boolean,
       default: false
     },
+
 
   },
   {

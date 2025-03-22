@@ -5,6 +5,8 @@ const productValidator = {
     body("name").trim().notEmpty().withMessage("Product name is required."),
     body("description").optional().isString(),
     body("brand").optional().isString(),
+    body("hsn").optional().isString(),
+    body("tax").optional().isFloat({ min: 0 }),
     body("price")
       .notEmpty().withMessage("Price is required.")
       .isFloat({ gt: 0 }).withMessage("Price must be greater than 0."),
@@ -45,6 +47,8 @@ const productValidator = {
     body("name").optional().trim().notEmpty().withMessage("Product name cannot be empty."),
     body("description").optional().isString(),
     body("brand").optional().isString(),
+    body("hsn").optional().isString(),
+    body("tax").optional().isFloat({ min: 0 }),
     body("price")
       .optional()
       .isFloat({ gt: 0 })

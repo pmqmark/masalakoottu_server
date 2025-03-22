@@ -33,11 +33,15 @@ exports.updateProductStatus = async (id, isArchived) => {
 }
 
 exports.decrementProductQty = async (cart) => {
-    const productUpdates = cart?.map((item) => {
+    const productUpdates = cart?.map(async(item) => {
         const productId = item?.productId;
         const quantity = item?.quantity;
 
-        return Product.findByIdAndUpdate(productId, { $inc: { stock: -quantity } })
+        return await Product.findOneAndUpdate(
+            { _id: productId, stock: { $gte: quantity } },
+            { $inc: { stock: -quantity } }
+        );
+        
     })
 
     await Promise.all(productUpdates);
@@ -149,4 +153,19 @@ exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
             };
         })
     };
+};
+
+
+exports.stockChecker = async(items) => {
+    for (const item of items) {
+        const product = await Product.findById(item.productId);
+        if (!product) {
+            return { success: false, reason: 'Product not found', productId: item.productId };
+        }
+        if (product.stock < item.quantity) {
+            return { success: false, reason: 'Insufficient stock', productId: item.productId, availableStock: product.stock };
+        }
+    }
+
+    return { success: true };
 };

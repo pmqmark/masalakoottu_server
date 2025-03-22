@@ -4,11 +4,11 @@ const { deleteFileFromDO } = require("../utils/storage.util");
 
 exports.createCategoryCtrl = async (req, res) => {
     try {
-        const { name, description,productIds,
+        const {parent, name, description,productIds,
             image, isArchived } = req.body;
 
         const createObj = {
-            name, description,productIds,
+            parent, name, description,productIds,
             image, isArchived
         }
 
@@ -194,7 +194,7 @@ exports.getManyCategoriesCtrl = async (req, res, next) => {
         let { page, entries } = req.query;
         page = parseInt(page);
         entries = parseInt(entries)
-        const { search } = req.query;
+        const { search, parent } = req.query;
 
         const filters = { isArchived: false };
 
@@ -205,6 +205,9 @@ exports.getManyCategoriesCtrl = async (req, res, next) => {
             ]
         }
 
+        if(isValidObjectId(parent)){
+            filters.parent = parent
+        }
 
         let result = await getManyCategories(filters)
         console.log({ result })
@@ -237,7 +240,7 @@ exports.getAllCategorysCtrl = async (req, res, next) => {
         let { page, entries } = req.query;
         page = parseInt(page);
         entries = parseInt(entries)
-        const { search } = req.query;
+        const { search , parent} = req.query;
 
         const filters = {};
 
@@ -246,6 +249,10 @@ exports.getAllCategorysCtrl = async (req, res, next) => {
                 { name: new RegExp(search, 'i') },
                 { description: new RegExp(search, 'i') },
             ]
+        }
+
+        if(isValidObjectId(parent)){
+            filters.parent = parent
         }
 
         let result = await getManyCategories(filters)

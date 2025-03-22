@@ -107,7 +107,7 @@ exports.getCart = async (userId) => {
     const user = await User.findById(userId)
         .populate({
             path: 'cart.productId',
-            select: 'name price thumbnail variations',
+            select: 'name price thumbnail tax variations',
             populate: {
                 path: 'variations.options',
                 select: 'optionId additionalPrice'
@@ -129,6 +129,7 @@ exports.getCart = async (userId) => {
             quantity: item?.quantity || 1,
             name: product.name || "Unknown Product",
             price: product.price || 0,
+            tax: product?.tax || 0,
             thumbnail: product.thumbnail || null,
             variations: []
         };
@@ -157,28 +158,6 @@ exports.getCart = async (userId) => {
     return cart;
 };
 
-
-// exports.removeFromCart = async (userId, productId, variations=[]) => {
-//     const user = await User.findById(userId);
-//     if (!user || !Array.isArray(user?.cart)) throw new Error("Cart not found");
-
-//     let cart = user?.cart;
-
-//     const itemIndex = cart.findIndex(item =>
-//         item.productId.toString() === productId &&
-//         _.isEqual(normalizeVariations(item.variations), normalizeVariations(variations))
-//     );
-
-//     if (itemIndex > -1) {
-//         cart.splice(itemIndex, 1);
-//     } else {
-//         throw new Error("Item not found in cart");
-//     }
-
-//     user.cart = cart;
-//     await user.save();
-//     return user.cart;
-// };
 
 exports.removeFromCart = async (userId, itemId) => {
     const user = await User.findById(userId);

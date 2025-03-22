@@ -4,12 +4,10 @@ const { saveOrder, onlinePayment, updateOrder, findManyOrders, getOrderById,
     cancelMyOrder, returnMyOrder, clearCart, checkOrderPayStatusWithPG,
     sendRefundRequestToPhonepe,
     fetchRefundStatusFromPhonepe } = require("../services/order.service");
-const { decrementProductQty, getBuyNowItem } = require("../services/product.service");
+const { decrementProductQty, getBuyNowItem, stockChecker } = require("../services/product.service");
 const { getCart, getUserById } = require("../services/user.service");
 const { addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
 const moment = require("moment");
-
-const ClientURL = process.env.ClientURL;
 
 
 exports.checkoutCtrl = async (req, res) => {
@@ -45,10 +43,27 @@ exports.checkoutCtrl = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid Buy Mode', error: 'BAD_REQUEST' });
         }
 
-        let amount = items.reduce((total, item) => {
+        const stockCheckResponse = await stockChecker(items)
+
+        if (stockCheckResponse?.success === false) {
+            return res.status(400).json({
+                success: false,
+                message: stockCheckResponse?.reason,
+                error: 'OUT_OF_STOCK'
+            });
+        }
+
+
+        let subTotal = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
             return total + ((item.price + extraCharges) * item.quantity);
         }, 0);
+
+        const totalTax = items.reduce((total, item) => {
+            const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
+            return total + (((item.price + extraCharges) * item.quantity) * (item.tax / 100));
+        }, 0);
+
 
         let discountAmount = 0;
         const { autoDiscountAmt, autoDiscountMsg } = await applyAutomaticDiscounts(items)
@@ -59,7 +74,7 @@ exports.checkoutCtrl = async (req, res) => {
         }
 
         if (couponCode?.trim()) {
-            const { couponDiscountAmt, couponDiscountMsg } = await applyCouponDiscount(userId, couponCode, amount)
+            const { couponDiscountAmt, couponDiscountMsg } = await applyCouponDiscount(userId, couponCode, (subTotal + totalTax))
             console.log({ couponDiscountMsg })
 
             if (typeof couponDiscountAmt === "number" && couponDiscountAmt > 0) {
@@ -68,7 +83,7 @@ exports.checkoutCtrl = async (req, res) => {
 
         }
 
-        const orderAmount = amount + Math.max(0, deliveryCharge) - discountAmount;
+        const orderAmount = subTotal + totalTax + Math.max(0, deliveryCharge) - discountAmount;
 
         const prefix = 'ORDID';
         const value = moment().add(10, 'seconds').unix();
@@ -78,14 +93,16 @@ exports.checkoutCtrl = async (req, res) => {
             payMode,
             buyMode,
             couponCode,
+            totalTax,
+            discount: discountAmount,
+            deliveryCharge: Math.max(0, deliveryCharge),
+            subTotal,
             amount: orderAmount,
             items,
             userId,
             billAddress,
             shipAddress,
-            discount: discountAmount,
             deliveryType,
-            deliveryCharge,
             merchantOrderId
         };
 
