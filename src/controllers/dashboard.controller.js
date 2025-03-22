@@ -304,3 +304,242 @@ exports.getSaleAnalytics = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error", error: 'INTERNAL_SERVER_ERROR' });
     }
 }
+
+
+/////////////////////////
+
+
+exports.dashboardCtrl = async (req, res) => {
+    try {
+        // Metrics
+        const totalUsers = await countUsers()
+        const totalOrders = await countOrders();
+
+        const deliveredOrders = await findManyOrders({ status: "delivered" });
+        const totalSale = deliveredOrders.reduce((total, order) => total + parseFloat(order.amount), 0);
+        const totalRevenue = deliveredOrders.reduce((total, order) => total + parseFloat(order.amount) - parseFloat(order.deliveryCharge), 0);
+        const allProducts = await getManyProducts({}, { stock: 1 })
+        const totalItems = allProducts.reduce((acc, item) => { return acc + item?.stock }, 0)
+
+        const metrics_data = {
+            totalSale,
+            totalOrders,
+            totalItems,
+            totalRevenue,
+            totalUsers,
+        }
+
+        // Recent orders
+        const sevenDaysAgo = dayjs().subtract(7, 'day').toDate();
+
+        const allOrders = await findManyOrders({ createdAt: { $gte: sevenDaysAgo } }, { items: 1 })
+
+        const arr = allOrders?.map((elem) => elem.items)
+
+        const flatArr = arr.flat();
+
+        const recent_orders = flatArr.length > 10 ? flatArr.slice(0, 10) : flatArr;
+
+
+        // Recent users
+        const dayCount = 7
+
+        // const sevenDaysAgo = dayjs().subtract(dayCount, 'day').startOf('day').toDate();
+
+        const results = await User.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: sevenDaysAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        day: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { "_id.day": 1 }
+            }
+        ]);
+
+        const recent_users = [];
+
+        for (let i = dayCount; i >= 1; i--) {
+            const day = dayjs().subtract(i, 'day');
+            const dayFormatted = day.format('YYYY-MM-DD');
+            const dayName = day.format('ddd');
+            const found = results.find(r => r._id.day === dayFormatted);
+            recent_users.push({
+                day: dayName,
+                userCount: found ? found.count : 0
+            });
+        }
+
+
+        // Best selling prods
+        const thirtyDaysAgo = dayjs().subtract(30, 'day').startOf('day').toDate();
+
+        const bestSellingProducts = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: thirtyDaysAgo }
+                }
+            },
+
+            {
+                $unwind: "$items"
+            },
+
+            {
+                $group: {
+                    _id: "$items.productId",
+                    totalQuantity: { $sum: "$items.quantity" }
+                }
+            },
+
+            {
+                $sort: { totalQuantity: -1 }
+            },
+
+            {
+                $limit: 10
+            },
+
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+
+            {
+                $unwind: "$product"
+            },
+
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: '_id',
+                    foreignField: 'productIds',
+                    as: 'category'
+                }
+            },
+
+            {
+                $project: {
+                    _id: 0,
+                    productId: "$_id",
+                    productName: "$product.name",
+                    totalQuantity: 1,
+                    thumbnail: "$product.thumbnail",
+                    price: "$product.price",
+                    category: { $first: "$category.name" }
+                }
+            }
+        ])
+
+
+        // Sale analytics
+        const past12Months = dayjs().subtract(11, 'months').startOf('month').toDate();
+
+        const deliveredPipeline = [
+            {
+                $match: {
+                    status: 'delivered',
+                    orderDate: { $gte: past12Months }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$orderDate" },
+                        month: { $month: "$orderDate" }
+                    },
+                    totalRevenue: { $sum: "$amount" }
+                }
+            },
+            {
+                $sort: { "_id.year": 1, "_id.month": 1 }
+            }
+        ]
+
+        const cancelledPipeline = [
+            {
+                $match: {
+                    status: 'cancelled',
+                    orderDate: { $gte: past12Months }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$orderDate" },
+                        month: { $month: "$orderDate" }
+                    },
+                    totalLoss: { $sum: "$amount" }
+                }
+            },
+            {
+                $sort: { "_id.year": 1, "_id.month": 1 }
+            }
+        ]
+
+        const deliveredChart = await Order.aggregate(deliveredPipeline)
+        const cancelledChart = await Order.aggregate(cancelledPipeline)
+
+        const months = Array.from({ length: 12 }, (_, i) => {
+            const date = dayjs().subtract(11 - i, 'months');
+            return { label: date.format('MMM'), monthNumber: date.month() + 1 };
+        });
+
+        const formatChart = (data, key) => {
+            return months.map(({ label, monthNumber }) => {
+                const entry = data.find(d => d._id.month === monthNumber);
+                return {
+                    x: label,
+                    y: entry ? entry[key] : 0
+                };
+            });
+        };
+
+        const categories = months?.map((item) => item.label)
+
+        const deliveredFormatted = formatChart(deliveredChart, 'totalRevenue');
+        const cancelledFormatted = formatChart(cancelledChart, 'totalLoss');
+
+        const series = [
+            {
+                name: "Sales",
+                data: deliveredFormatted
+            },
+            {
+                name: "Revenue loss from cancelled orders",
+                data: cancelledFormatted
+            },
+        ]
+
+        const sale_analytics = { categories, series }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: {
+                metrics_data,
+                recent_orders,
+                recent_users,
+                best_prods: bestSellingProducts,
+                sale_analytics
+            },
+            error: null
+        })
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: 'INTERNAL_SERVER_ERROR' });
+    }
+};
