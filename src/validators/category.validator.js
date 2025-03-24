@@ -1,8 +1,17 @@
 const { body } = require("express-validator");
+const { default: mongoose } = require("mongoose");
 
 const categoryValidator = {
   create: [
-    body("parent").optional().isMongoId().withMessage("Parent is not a valid id"),
+    body("parent")
+    .optional({ nullable: true }) 
+    .custom(value => {
+        if (value === null) return true; 
+        if (value === '') return true;  
+        if (mongoose.Types.ObjectId.isValid(value)) return true;
+        throw new Error('Parent is not a valid id');
+    }),
+
     body("name").trim().notEmpty().withMessage("Category name is required."),
     body("description").optional().isString(),
     body("isArchived").optional().isBoolean(),
@@ -15,7 +24,15 @@ const categoryValidator = {
   ],
 
   update: [
-    body("parent").optional().isMongoId().withMessage("Parent is not a valid id"),
+    body("parent")
+    .optional({ nullable: true }) 
+    .custom(value => {
+        if (value === null) return true; 
+        if (value === '') return true;  
+        if (mongoose.Types.ObjectId.isValid(value)) return true;
+        throw new Error('Parent is not a valid id');
+    }),
+
     body("name").optional().trim().notEmpty().withMessage("Category name cannot be empty."),
     body("description").optional().isString(),
     body("isArchived").optional().isBoolean(),
