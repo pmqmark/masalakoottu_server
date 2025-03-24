@@ -545,7 +545,9 @@ exports.updateCartCtrl = async (req, res) => {
             })
         }
 
-        const cart = await updateCart(userId, itemId, quantity);
+        await updateCart(userId, itemId, quantity);
+
+        const cart = await getCart(userId)
 
         return res.status(200).json({
             success: true,
@@ -582,7 +584,9 @@ exports.removeFromCartCtrl = async (req, res) => {
             })
         }
 
-        const cart = await removeFromCart(userId, itemId);
+        await removeFromCart(userId, itemId);
+
+        const cart = await getCart(userId)
 
         return res.status(200).json({
             success: true,
