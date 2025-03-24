@@ -60,4 +60,6 @@ const upload = multer({
 });
 
 
-module.exports = { upload, s3Client , Bucket}
+const uploadtoMemory = multer({ storage: multer.memoryStorage() });
+
+module.exports = { upload, s3Client , Bucket, uploadtoMemory}

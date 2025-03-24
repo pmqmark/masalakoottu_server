@@ -1,5 +1,5 @@
 const { isValidObjectId } = require("mongoose");
-const { createProduct, updateProduct, updateProductStatus, getProductById, getManyProducts, createVariation, updateVariation, getOneVariation, deleteVariation, getManyVariation, createOption, getOneOption, getManyOption, updateOption, deleteOption } = require("../services/product.service");
+const { createProduct, updateProduct, updateProductStatus, getProductById, getManyProducts, createVariation, updateVariation, getOneVariation, deleteVariation, getManyVariation, createOption, getOneOption, getManyOption, updateOption, deleteOption, bulkInsertProducts } = require("../services/product.service");
 const { deleteMultipleFilesFromDO, deleteFileFromDO } = require("../utils/storage.util");
 
 exports.createProductCtrl = async (req, res) => {
@@ -612,6 +612,34 @@ exports.deleteOptionCtrl = async (req, res) => {
     } catch (error) {
         console.error(error)
         res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
+
+
+exports.bulkAddProductsCtrl = async(req, res)=>{
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'CSV file is required.' });
+        }
+
+        console.log('File info:', req.file);
+
+        await bulkInsertProducts(req.file)
+        
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: null,
+            error: null
+        })
+    } catch (error) {
+        console.error(error)
+        return res.status(500).json({
             success: false,
             message: "Internal Server error",
             data: null,

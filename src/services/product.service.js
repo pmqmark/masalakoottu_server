@@ -1,6 +1,8 @@
 const { Product } = require("../models/product.model");
 const { Variation } = require("../models/variation.model");
 const { Option } = require("../models/option.model");
+const csv = require('csv-parser');
+const { Readable } = require('stream');
 
 exports.createProduct = async (obj = {}) => {
     return await Product.create(obj);
@@ -194,4 +196,35 @@ exports.addExtrasNTaxToPrice = (item) => {
         ...item,
         finalPrice: Number(finalPrice.toFixed(2)),
     };
+}
+
+
+exports.bulkInsertProducts = async(file)=>{
+    const results = [];
+
+    const stream = Readable.from(file.buffer);
+
+    stream.pipe(csv())
+        .on('data', (row) => {
+            results.push({
+                name: row.name,
+                price: parseFloat(row.price),
+                hsn: row.hsn,
+                tax: row.tax,
+                brand: row.brand,
+                stock: 100
+            });
+        })
+        .on('end', async () => {
+            
+                console.log({results})
+
+                await Product.insertMany(results);
+
+                console.log({ message: `${results.length} products inserted successfully.` })
+        })
+        .on('error', (err) => {
+            console.error('CSV parsing error:', err);
+            throw new Error('CSV parsing failed.')
+        });
 }
