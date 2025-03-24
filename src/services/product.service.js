@@ -19,6 +19,7 @@ exports.getManyProducts = async (filters = {}, project = {}) => {
         .populate("reviews.userId", "firstName lastName")
         .populate("variations.variationId", "name")
         .populate("variations.options.optionId", "value")
+        .sort({createdAt: -1})
         .lean()
 }
 

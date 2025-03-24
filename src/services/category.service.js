@@ -14,6 +14,7 @@ exports.getManyCategories = async (filters = {}) => {
     return await Category.find(filters)
     .populate("parent")
     .populate("productIds", "name price thumbnail")
+    .sort({createdAt: -1})
 }
 
 exports.updateCategory = async (id, obj = {}) => {

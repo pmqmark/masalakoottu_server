@@ -35,7 +35,8 @@ exports.getUserById = async (id) => {
 }
 
 exports.getManyUsers = async (filters) => {
-    return await User.find(filters, {password:0, cart:0});
+    return await User.find(filters, {password:0, cart:0})
+    .sort({createdAt: -1});
 }
 
 exports.updateUser = async (id, updateObj) => {
