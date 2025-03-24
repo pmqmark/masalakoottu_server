@@ -27,9 +27,8 @@ exports.checkoutCtrl = async (req, res) => {
 
         if (buyMode === "later") {
             items = await getCart(userId);
-            if (!items || items.length === 0) {
-                return res.status(400).json({ success: false, message: 'Empty Cart', error: 'BAD_REQUEST' });
-            }
+
+
         } else if (buyMode === "now") {
             if (!isValidObjectId(productId) || quantity <= 0) {
                 return res.status(400).json({ success: false, message: 'Invalid Product Id or Quantity', error: 'BAD_REQUEST' });
@@ -43,16 +42,36 @@ exports.checkoutCtrl = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid Buy Mode', error: 'BAD_REQUEST' });
         }
 
-        const stockCheckResponse = await stockChecker(items)
+        const removedItems = [];
 
-        if (stockCheckResponse?.success === false) {
+        items = items.filter((item) => {
+            if (item.stockStatus === 'OUT_OF_STOCK') {
+                removedItems.push(item.name);
+                return false
+            }
+            return true
+        }
+        )
+
+        if (removedItems.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: stockCheckResponse?.reason,
+                message: `The following items are out of stock: ${removedItems.join(", ")}`,
                 error: 'OUT_OF_STOCK'
             });
         }
 
+        items = items.map((item) => {
+            if (item.stockStatus === 'INSUFFICIENT') {
+                item.quantity = Math.max(item.stock, 1);
+            }
+
+            return item
+        })
+
+        if (!items || items.length === 0) {
+            return res.status(400).json({ success: false, message: 'Empty Cart', error: 'BAD_REQUEST' });
+        }
 
         let subTotal = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;

@@ -8,16 +8,18 @@ exports.createProduct = async (obj = {}) => {
 
 exports.getProductById = async (id) => {
     return await Product.findById(id)
-    .populate("reviews.userId", "firstName lastName")
-    .populate("variations.variationId", "name")
-    .populate("variations.options.optionId", "value")
+        .populate("reviews.userId", "firstName lastName")
+        .populate("variations.variationId", "name")
+        .populate("variations.options.optionId", "value")
+        .lean()
 }
 
-exports.getManyProducts = async (filters = {}, project ={}) => {
+exports.getManyProducts = async (filters = {}, project = {}) => {
     return await Product.find(filters, project)
-    .populate("reviews.userId", "firstName lastName")
-    .populate("variations.variationId", "name")
-    .populate("variations.options.optionId", "value")
+        .populate("reviews.userId", "firstName lastName")
+        .populate("variations.variationId", "name")
+        .populate("variations.options.optionId", "value")
+        .lean()
 }
 
 exports.updateProduct = async (id, obj = {}) => {
@@ -33,7 +35,7 @@ exports.updateProductStatus = async (id, isArchived) => {
 }
 
 exports.decrementProductQty = async (cart) => {
-    const productUpdates = cart?.map(async(item) => {
+    const productUpdates = cart?.map(async (item) => {
         const productId = item?.productId;
         const quantity = item?.quantity;
 
@@ -41,7 +43,7 @@ exports.decrementProductQty = async (cart) => {
             { _id: productId, stock: { $gte: quantity } },
             { $inc: { stock: -quantity } }
         );
-        
+
     })
 
     await Promise.all(productUpdates);
@@ -54,12 +56,12 @@ exports.createVariation = async (obj) => {
 
 exports.getOneVariation = async (id) => {
     return await Variation.findById(id)
-    .populate('options', 'value')
+        .populate('options', 'value')
 }
 
 exports.getManyVariation = async (filters) => {
     return await Variation.find(filters)
-    .populate('options', 'value')
+        .populate('options', 'value')
 }
 
 exports.updateVariation = async (id, obj) => {
@@ -138,6 +140,15 @@ exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
         product.variations?.map(v => [v.variationId.toString(), v.options]) || []
     );
 
+    let stockStatus = 'AVAILABLE'       
+
+        if(product.stock <= 0){
+            stockStatus = 'OUT_OF_STOCK'
+        }
+        else if(product.stock < item.quantity){
+            stockStatus = 'INSUFFICIENT'
+        }
+
     return {
         productId,
         quantity,
@@ -151,12 +162,14 @@ exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
                 value: optionMap.get(optionId) || "Unknown Option",
                 additionalPrice: prodOpt?.additionalPrice || 0
             };
-        })
+        }),
+        stock: product.stock,
+        stockStatus,
     };
 };
 
 
-exports.stockChecker = async(items) => {
+exports.stockChecker = async (items) => {
     for (const item of items) {
         const product = await Product.findById(item.productId);
         if (!product) {
@@ -169,3 +182,15 @@ exports.stockChecker = async(items) => {
 
     return { success: true };
 };
+
+
+exports.addExtrasNTaxToPrice = (item) => {
+    const extraCharges = item.variations?.reduce((acc, elem) => acc + (elem?.additionalPrice || 0), 0) || 0;
+    const basePrice = item.price + extraCharges;
+    const taxRate = item.tax || 0;
+    const finalPrice = basePrice * (1 + taxRate / 100);
+    return {
+        ...item,
+        finalPrice: Number(finalPrice.toFixed(2)),
+    };
+}

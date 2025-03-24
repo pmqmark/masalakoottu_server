@@ -107,7 +107,7 @@ exports.getCart = async (userId) => {
     const user = await User.findById(userId)
         .populate({
             path: 'cart.productId',
-            select: 'name price thumbnail tax variations',
+            select: 'name price stock thumbnail tax variations',
             populate: {
                 path: 'variations.options',
                 select: 'optionId additionalPrice'
@@ -123,6 +123,15 @@ exports.getCart = async (userId) => {
         const product = item?.productId || {};
         const variations = product?.variations || [];
 
+        let stockStatus = 'AVAILABLE'       
+
+        if(product.stock <= 0){
+            stockStatus = 'OUT_OF_STOCK'
+        }
+        else if(product.stock < item.quantity){
+            stockStatus = 'INSUFFICIENT'
+        }
+
         const obj = {
             _id: item?._id,
             productId: product._id || null,
@@ -131,7 +140,9 @@ exports.getCart = async (userId) => {
             price: product.price || 0,
             tax: product?.tax || 0,
             thumbnail: product.thumbnail || null,
-            variations: []
+            variations: [],
+            stock: product.stock,
+            stockStatus,
         };
 
         const cartItemVariations = item.variations || [];
