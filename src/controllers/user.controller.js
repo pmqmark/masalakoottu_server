@@ -13,7 +13,7 @@ const { checkIfVariationExists } = require("../services/product.service");
 const { findManyOrders } = require("../services/order.service");
 
 // Accessible to Public
-exports.registerUserCtrl = async (req, res) => {
+module.exports.registerUserCtrl = async (req, res) => {
     try {
         const { firstName, lastName, gender,
             email, mobile, password, credType, otp } = req.body;
@@ -134,7 +134,7 @@ exports.registerUserCtrl = async (req, res) => {
 }
 
 // Accessible to user
-exports.getUserProfileByIdCtrl = async (req, res, next) => {
+module.exports.getUserProfileByIdCtrl = async (req, res, next) => {
     try {
         const { userId } = req.user;
 
@@ -178,7 +178,7 @@ exports.getUserProfileByIdCtrl = async (req, res, next) => {
 }
 
 // Access to Admin only
-exports.createUserCtrl = async (req, res) => {
+module.exports.createUserCtrl = async (req, res) => {
     try {
         const { firstName, lastName, gender,
             email, mobile, password, credType } = req.body;
@@ -239,7 +239,7 @@ exports.createUserCtrl = async (req, res) => {
     }
 }
 
-exports.updateUserCtrl = async (req, res, next) => {
+module.exports.updateUserCtrl = async (req, res, next) => {
     try {
         const { userId } = req.user;
 
@@ -317,7 +317,7 @@ exports.updateUserCtrl = async (req, res, next) => {
     }
 }
 
-exports.updateUserStatusCtrl = async (req, res, next) => {
+module.exports.updateUserStatusCtrl = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -373,7 +373,7 @@ exports.updateUserStatusCtrl = async (req, res, next) => {
 }
 
 
-exports.getUserByIdCtrl = async (req, res, next) => {
+module.exports.getUserByIdCtrl = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -414,7 +414,7 @@ exports.getUserByIdCtrl = async (req, res, next) => {
 
 
 
-exports.getManyUsersCtrl = async (req, res, next) => {
+module.exports.getManyUsersCtrl = async (req, res, next) => {
     try {
         let { page, entries } = req.query;
         page = parseInt(page);
@@ -461,7 +461,7 @@ exports.getManyUsersCtrl = async (req, res, next) => {
     }
 }
 
-exports.addToCartCtrl = async (req, res) => {
+module.exports.addToCartCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
@@ -509,7 +509,7 @@ exports.addToCartCtrl = async (req, res) => {
     }
 }
 
-exports.getCartCtrl = async (req, res) => {
+module.exports.getCartCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
@@ -530,7 +530,7 @@ exports.getCartCtrl = async (req, res) => {
     }
 };
 
-exports.updateCartCtrl = async (req, res) => {
+module.exports.updateCartCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
@@ -569,7 +569,7 @@ exports.updateCartCtrl = async (req, res) => {
     }
 }
 
-exports.removeFromCartCtrl = async (req, res) => {
+module.exports.removeFromCartCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
@@ -609,7 +609,7 @@ exports.removeFromCartCtrl = async (req, res) => {
 }
 
 
-exports.addToWishlistCtrl = async (req, res) => {
+module.exports.addToWishlistCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
         const { productId } = req.body;
@@ -643,7 +643,7 @@ exports.addToWishlistCtrl = async (req, res) => {
     }
 }
 
-exports.getWishlistCtrl = async (req, res) => {
+module.exports.getWishlistCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
@@ -664,7 +664,7 @@ exports.getWishlistCtrl = async (req, res) => {
     }
 };
 
-exports.removeFromWishlistCtrl = async (req, res) => {
+module.exports.removeFromWishlistCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
@@ -699,7 +699,7 @@ exports.removeFromWishlistCtrl = async (req, res) => {
     }
 }
 
-exports.getUserAddresssesCtrl = async (req, res) => {
+module.exports.getUserAddresssesCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
@@ -735,7 +735,7 @@ exports.getUserAddresssesCtrl = async (req, res) => {
     }
 }
 
-exports.getAllAddresssesCtrl = async (req, res) => {
+module.exports.getAllAddresssesCtrl = async (req, res) => {
     try {
         const filters = {}
 
@@ -758,7 +758,7 @@ exports.getAllAddresssesCtrl = async (req, res) => {
     }
 }
 
-exports.getOneAddressCtrl = async (req, res) => {
+module.exports.getOneAddressCtrl = async (req, res) => {
     try {
         const { addressId } = req.params;
 
@@ -790,7 +790,7 @@ exports.getOneAddressCtrl = async (req, res) => {
     }
 }
 
-exports.postAddresssesCtrl = async (req, res) => {
+module.exports.postAddresssesCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
         const createObj = req.body;
@@ -814,7 +814,7 @@ exports.postAddresssesCtrl = async (req, res) => {
     }
 }
 
-exports.updateAddresssesCtrl = async (req, res) => {
+module.exports.updateAddresssesCtrl = async (req, res) => {
     try {
         const { addressId } = req.params;
         const updateObj = req.body;
@@ -838,7 +838,7 @@ exports.updateAddresssesCtrl = async (req, res) => {
     }
 }
 
-exports.deleteAddresssesCtrl = async (req, res) => {
+module.exports.deleteAddresssesCtrl = async (req, res) => {
     try {
         const { addressId } = req.params;
 

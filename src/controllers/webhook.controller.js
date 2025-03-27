@@ -4,7 +4,7 @@ const { verifyPhonePeHash, checkoutOrderCompletedHandler,
     pgRefundFailedHandler
 } = require("../services/webhook.service");
 
-exports.phonepeWebhookHandler = async (req, res) => {
+module.exports.phonepeWebhookHandler = async (req, res) => {
     try {
         console.log({ authHeader: req.headers['authorization'] })
 

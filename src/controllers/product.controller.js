@@ -2,7 +2,7 @@ const { isValidObjectId } = require("mongoose");
 const { createProduct, updateProduct, updateProductStatus, getProductById, getManyProducts, createVariation, updateVariation, getOneVariation, deleteVariation, getManyVariation, createOption, getOneOption, getManyOption, updateOption, deleteOption, bulkInsertProducts } = require("../services/product.service");
 const { deleteMultipleFilesFromDO, deleteFileFromDO } = require("../utils/storage.util");
 
-exports.createProductCtrl = async (req, res) => {
+module.exports.createProductCtrl = async (req, res) => {
     try {
         const { name, description, brand, price,thumbnail, images,
             stock, reviews, variations, isFeatured, tags, isArchived,
@@ -39,7 +39,7 @@ exports.createProductCtrl = async (req, res) => {
     }
 }
 
-exports.updateProductCtrl = async (req, res) => {
+module.exports.updateProductCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -111,7 +111,7 @@ exports.updateProductCtrl = async (req, res) => {
     }
 }
 
-exports.updateProductStatusCtrl = async (req, res, next) => {
+module.exports.updateProductStatusCtrl = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -167,7 +167,7 @@ exports.updateProductStatusCtrl = async (req, res, next) => {
 }
 
 
-exports.getProductByIdCtrl = async (req, res) => {
+module.exports.getProductByIdCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -206,7 +206,7 @@ exports.getProductByIdCtrl = async (req, res) => {
 
 
 
-exports.getManyProductsCtrl = async (req, res, next) => {
+module.exports.getManyProductsCtrl = async (req, res, next) => {
     try {
         let { page, entries } = req.query;
         page = parseInt(page);
@@ -253,7 +253,7 @@ exports.getManyProductsCtrl = async (req, res, next) => {
 }
 
 
-exports.getAllProductsCtrl = async (req, res, next) => {
+module.exports.getAllProductsCtrl = async (req, res, next) => {
     try {
         let { page, entries } = req.query;
         page = parseInt(page);
@@ -299,7 +299,7 @@ exports.getAllProductsCtrl = async (req, res, next) => {
     }
 }
 
-exports.createVariationCtrl = async (req, res) => {
+module.exports.createVariationCtrl = async (req, res) => {
     try {
         const { name, options = [] } = req.body;
         if (!name?.trim()) {
@@ -339,7 +339,7 @@ exports.createVariationCtrl = async (req, res) => {
     }
 }
 
-exports.getOneVariationCtrl = async (req, res) => {
+module.exports.getOneVariationCtrl = async (req, res) => {
     try {
         const { variationId } = req.params;
 
@@ -371,7 +371,7 @@ exports.getOneVariationCtrl = async (req, res) => {
     }
 }
 
-exports.getManyVariationCtrl = async (req, res) => {
+module.exports.getManyVariationCtrl = async (req, res) => {
     try {
         const filters = {}
 
@@ -394,7 +394,7 @@ exports.getManyVariationCtrl = async (req, res) => {
     }
 }
 
-exports.updateVariationCtrl = async (req, res) => {
+module.exports.updateVariationCtrl = async (req, res) => {
     try {
         const { variationId } = req.params;
         const { name, options } = req.body;
@@ -427,7 +427,7 @@ exports.updateVariationCtrl = async (req, res) => {
     }
 }
 
-exports.deleteVariationCtrl = async (req, res) => {
+module.exports.deleteVariationCtrl = async (req, res) => {
     try {
         const { variationId } = req.params;
 
@@ -460,7 +460,7 @@ exports.deleteVariationCtrl = async (req, res) => {
 }
 
 
-exports.createOptionCtrl = async (req, res) => {
+module.exports.createOptionCtrl = async (req, res) => {
     try {
         const { value } = req.body;
         if (!value?.trim()) {
@@ -500,7 +500,7 @@ exports.createOptionCtrl = async (req, res) => {
     }
 }
 
-exports.getOneOptionCtrl = async (req, res) => {
+module.exports.getOneOptionCtrl = async (req, res) => {
     try {
         const { optionId } = req.params;
 
@@ -532,7 +532,7 @@ exports.getOneOptionCtrl = async (req, res) => {
     }
 }
 
-exports.getManyOptionCtrl = async (req, res) => {
+module.exports.getManyOptionCtrl = async (req, res) => {
     try {
         const filters = {}
 
@@ -555,7 +555,7 @@ exports.getManyOptionCtrl = async (req, res) => {
     }
 }
 
-exports.updateOptionCtrl = async (req, res) => {
+module.exports.updateOptionCtrl = async (req, res) => {
     try {
         const { optionId } = req.params;
         const { value } = req.body;
@@ -588,7 +588,7 @@ exports.updateOptionCtrl = async (req, res) => {
     }
 }
 
-exports.deleteOptionCtrl = async (req, res) => {
+module.exports.deleteOptionCtrl = async (req, res) => {
     try {
         const { optionId } = req.params;
 
@@ -621,7 +621,7 @@ exports.deleteOptionCtrl = async (req, res) => {
 }
 
 
-exports.bulkAddProductsCtrl = async(req, res)=>{
+module.exports.bulkAddProductsCtrl = async(req, res)=>{
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'CSV file is required.' });

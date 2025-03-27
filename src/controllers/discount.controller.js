@@ -1,7 +1,7 @@
 const { isValidObjectId } = require("mongoose");
 const { createDiscount, getDiscounts, getDiscountsById, updateDiscount, deleteDiscount, applyCouponDiscount } = require("../services/discount.service");
 
-exports.createDiscountCtrl = async (req, res) => {
+module.exports.createDiscountCtrl = async (req, res) => {
     try {
         const discount = await createDiscount(req.body);
         if (!discount) {
@@ -13,7 +13,7 @@ exports.createDiscountCtrl = async (req, res) => {
     }
 };
 
-exports.getDiscountsCtrl = async (req, res) => {
+module.exports.getDiscountsCtrl = async (req, res) => {
     try {
         const { isActive, appliesAutomatically, code } = req.query;
         const query = {};
@@ -29,7 +29,7 @@ exports.getDiscountsCtrl = async (req, res) => {
     }
 };
 
-exports.getDiscountByIdCtrl = async (req, res) => {
+module.exports.getDiscountByIdCtrl = async (req, res) => {
     try {
         const { id } = req.params;
         const discount = await getDiscountsById(id);
@@ -42,7 +42,7 @@ exports.getDiscountByIdCtrl = async (req, res) => {
     }
 };
 
-exports.updateDiscountCtrl = async (req, res) => {
+module.exports.updateDiscountCtrl = async (req, res) => {
     try {
         const { id } = req.params;
         const updatedDiscount = await updateDiscount(id, req.body);
@@ -56,7 +56,7 @@ exports.updateDiscountCtrl = async (req, res) => {
     }
 };
 
-exports.deleteDiscountCtrl = async (req, res) => {
+module.exports.deleteDiscountCtrl = async (req, res) => {
     try {
         const { id } = req.params;
         const deletedDiscount = await deleteDiscount(id);
@@ -70,7 +70,7 @@ exports.deleteDiscountCtrl = async (req, res) => {
 };
 
 
-exports.fetchAvailableCouponsCtrl = async (req, res) => {
+module.exports.fetchAvailableCouponsCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
@@ -105,7 +105,7 @@ exports.fetchAvailableCouponsCtrl = async (req, res) => {
     }
 }
 
-exports.fetchCouponValue = async (req, res) => {
+module.exports.fetchCouponValue = async (req, res) => {
     try {
         const { userId } = req.user;
         const { couponCode, amount } = req.body;

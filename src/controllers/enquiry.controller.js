@@ -10,7 +10,7 @@ dayjs.extend(timezone);
 // Set the default timezone to IST
 dayjs.tz.setDefault('Asia/Kolkata');
 
-exports.postEnquiryCtrl = async (req, res) => {
+module.exports.postEnquiryCtrl = async (req, res) => {
     console.log(req.body);
     const { type, name, email, mobile, subject, message } = req.body;
     try {
@@ -61,7 +61,7 @@ exports.postEnquiryCtrl = async (req, res) => {
 }
 
 
-exports.getEnquiryByIdCtrl = async (req, res) => {
+module.exports.getEnquiryByIdCtrl = async (req, res) => {
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) {
@@ -101,7 +101,7 @@ exports.getEnquiryByIdCtrl = async (req, res) => {
     }
 }
 
-exports.getManyEnquiryCtrl = async (req, res) => {
+module.exports.getManyEnquiryCtrl = async (req, res) => {
     try {
         //search query;
         const searchQuery = req.query.search;
@@ -165,7 +165,7 @@ exports.getManyEnquiryCtrl = async (req, res) => {
 }
 
 
-exports.deleteEnquiryCtrl = async (req, res) => {
+module.exports.deleteEnquiryCtrl = async (req, res) => {
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) {

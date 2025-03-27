@@ -2,23 +2,23 @@ const { Enquiry } = require("../models/enquiry.model")
 const nodemailer = require("nodemailer");
 
 
-exports.createEnquiry = async (obj) => {
+module.exports.createEnquiry = async (obj) => {
     return await Enquiry.create(obj)
 }
 
-exports.findEnquiryById = async (id) => {
+module.exports.findEnquiryById = async (id) => {
     return await Enquiry.findById(id)
 }
 
-exports.getManyEnquiries = async (filters) => {
+module.exports.getManyEnquiries = async (filters) => {
     return await Enquiry.find(filters).sort({ createdAt: -1 })
 }
 
-exports.deleteEnquiry = async (id) => {
+module.exports.deleteEnquiry = async (id) => {
     return await Enquiry.findByIdAndDelete(id)
 }
 
-exports.sendEmailViaNodemailer = async (from, subject, html) => {
+module.exports.sendEmailViaNodemailer = async (from, subject, html) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {

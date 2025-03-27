@@ -4,7 +4,7 @@ const { Otp } = require('../models/otp.model');
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-exports.sendOTPViaEmail = async (email, OTP) => {
+module.exports.sendOTPViaEmail = async (email, OTP) => {
     try {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -29,7 +29,7 @@ exports.sendOTPViaEmail = async (email, OTP) => {
     }
 };
 
-exports.sendOTPViaSMS = async (mobile, OTP) => {
+module.exports.sendOTPViaSMS = async (mobile, OTP) => {
     try {
         const options = {
             method: 'get',
@@ -52,43 +52,43 @@ exports.sendOTPViaSMS = async (mobile, OTP) => {
     }
 };
 
-exports.getOTPWithMobile = async (mobile) => {
+module.exports.getOTPWithMobile = async (mobile) => {
     return await Otp.findOne({ mobile }).lean()
 }
 
-exports.getOTPWithEmail = async (email) => {
+module.exports.getOTPWithEmail = async (email) => {
     return await Otp.findOne({ email }).lean()
 }
 
-exports.deleteOTP = async (id) => {
+module.exports.deleteOTP = async (id) => {
     return await Otp.findByIdAndDelete(id);
 }
 
-exports.createOTP = async (obj) => {
+module.exports.createOTP = async (obj) => {
     return await Otp.create(obj)
 }
 
-exports.validateOTPWithMobile = async ({ mobile, otp }) => {
+module.exports.validateOTPWithMobile = async ({ mobile, otp }) => {
     return await Otp.findOne({
         mobile: mobile.trim(),
         otp: otp.trim(),
     });
 }
 
-exports.validateOTPWithEmail = async ({ email, otp }) => {
+module.exports.validateOTPWithEmail = async ({ email, otp }) => {
     return await Otp.findOne({
         email: email.trim(),
         otp: otp.trim(),
     });
 }
 
-exports.verifyOTP = async (id) => {
+module.exports.verifyOTP = async (id) => {
     return await Otp.findByIdAndUpdate(id, {
         $set: { isVerified: true }
     }, { new: true })
 }
 
-exports.OTPVerificationStatus = async (id) => {
+module.exports.OTPVerificationStatus = async (id) => {
     const otpDoc = await Otp.findById(id)
 
     if (otpDoc?.isVerified === true) {
@@ -98,7 +98,7 @@ exports.OTPVerificationStatus = async (id) => {
     return false
 }
 
-exports.verifyGoogleIdToken = async (idToken) => {
+module.exports.verifyGoogleIdToken = async (idToken) => {
     return await client.verifyIdToken({
         idToken,
         audience: process.env.GOOGLE_CLIENT_ID,

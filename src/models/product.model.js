@@ -115,6 +115,15 @@ const productSchema = new Schema(
       default: false
     },
 
+    batches: [
+      {
+        batchNumber: { type: String, required: true, unique: true }, 
+        quantity: { type: Number, required: true, min: 0 }, 
+        manufacturedDate: { type: Date }, 
+        expiryDate: { type: Date },
+      },
+    ],
+
 
   },
   {

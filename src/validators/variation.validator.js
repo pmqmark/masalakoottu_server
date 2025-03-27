@@ -1,7 +1,7 @@
 const { body, param } = require('express-validator');
 const { isValidObjectId } = require('mongoose');
 
-exports.validateCreateVariation = [
+module.exports.validateCreateVariation = [
     body('name')
         .notEmpty().withMessage('Name is required')
         .isString().withMessage('Name must be a string')
@@ -17,7 +17,7 @@ exports.validateCreateVariation = [
         .withMessage('Each option must be a valid ObjectId'),
 ];
 
-exports.validateUpdateVariation = [
+module.exports.validateUpdateVariation = [
     param('variationId')
         .custom((value) => isValidObjectId(value))
         .withMessage('Invalid Variation ID'),

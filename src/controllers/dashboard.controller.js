@@ -10,7 +10,7 @@ const { Order } = require("../models/order.model");
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-exports.dashboardMetricsCtrl = async (req, res) => {
+module.exports.dashboardMetricsCtrl = async (req, res) => {
     try {
         const totalUsers = await countUsers()
         const totalOrders = await countOrders();
@@ -43,7 +43,7 @@ exports.dashboardMetricsCtrl = async (req, res) => {
 };
 
 
-exports.orderStatusesAndCountsCtrl = async (req, res) => {
+module.exports.orderStatusesAndCountsCtrl = async (req, res) => {
     try {
         const orderStatusesAndCounts = await orderStatusAndCountHandler()
 
@@ -61,7 +61,7 @@ exports.orderStatusesAndCountsCtrl = async (req, res) => {
     }
 }
 
-exports.getRecentOrders = async (req, res) => {
+module.exports.getRecentOrders = async (req, res) => {
     try {
         const sevenDaysAgo = dayjs().subtract(7, 'day').toDate();
 
@@ -86,7 +86,7 @@ exports.getRecentOrders = async (req, res) => {
     }
 }
 
-exports.getUserAddedCount = async (req, res) => {
+module.exports.getUserAddedCount = async (req, res) => {
     try {
         const dayCount = 7
 
@@ -138,7 +138,7 @@ exports.getUserAddedCount = async (req, res) => {
 }
 
 
-exports.getBestSellingProducts = async (req, res) => {
+module.exports.getBestSellingProducts = async (req, res) => {
     try {
         const thirtyDaysAgo = dayjs().subtract(30, 'day').startOf('day').toDate();
 
@@ -208,7 +208,7 @@ exports.getBestSellingProducts = async (req, res) => {
 }
 
 
-exports.getSaleAnalytics = async (req, res) => {
+module.exports.getSaleAnalytics = async (req, res) => {
     try {
         const past12Months = dayjs().subtract(11, 'months').startOf('month').toDate();
 
@@ -309,7 +309,7 @@ exports.getSaleAnalytics = async (req, res) => {
 /////////////////////////
 
 
-exports.dashboardCtrl = async (req, res) => {
+module.exports.dashboardCtrl = async (req, res) => {
     try {
         // Metrics
         const totalUsers = await countUsers()

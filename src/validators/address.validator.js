@@ -1,7 +1,7 @@
 const { body, param } = require('express-validator');
 const { isValidObjectId } = require('mongoose');
 
-exports.validateCreateAddress = [
+module.exports.validateCreateAddress = [
     body('fullName')
         .notEmpty().withMessage('Full name is required')
         .isString().withMessage('Full name must be a string')
@@ -36,7 +36,7 @@ exports.validateCreateAddress = [
         .matches(/^\d{10}$/).withMessage('Phone number must be a 10-digit number'),
 ];
 
-exports.validateUpdateAddress = [
+module.exports.validateUpdateAddress = [
     
     param('addressId')
         .custom((value) => isValidObjectId(value))

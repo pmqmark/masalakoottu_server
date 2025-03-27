@@ -1,6 +1,6 @@
 const { default: rateLimit } = require("express-rate-limit");
 
-exports.ratelimiter = rateLimit({
+module.exports.ratelimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes window
     max: 5,
     keyGenerator: (req, res) => {

@@ -1,6 +1,6 @@
 const { body } = require("express-validator");
 
-exports.testimonialValidator = [
+module.exports.testimonialValidator = [
     body("userId").optional().isMongoId().withMessage("Invalid user id"),
     body("name").optional().isString().withMessage("Name must be a string"),
     body("designation").optional().isString().withMessage("Designation must be a string"),

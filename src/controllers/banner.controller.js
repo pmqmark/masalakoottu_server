@@ -2,7 +2,7 @@ const { isValidObjectId } = require("mongoose");
 const { createBanner, updateBanner, getBannerById, getManyBanners, deleteBanner } = require("../services/banner.service");
 const { deleteFileFromDO } = require("../utils/storage.util");
 
-exports.createBannerCtrl = async (req, res) => {
+module.exports.createBannerCtrl = async (req, res) => {
     try {
         const createObj = req.body;
 
@@ -29,7 +29,7 @@ exports.createBannerCtrl = async (req, res) => {
     }
 }
 
-exports.getBannerByIdCtrl = async (req, res) => {
+module.exports.getBannerByIdCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -66,7 +66,7 @@ exports.getBannerByIdCtrl = async (req, res) => {
     }
 }
 
-exports.getManyBannersCtrl = async (req, res, next) => {
+module.exports.getManyBannersCtrl = async (req, res, next) => {
     try {
         let { page, entries } = req.query;
         page = parseInt(page);
@@ -109,7 +109,7 @@ exports.getManyBannersCtrl = async (req, res, next) => {
 }
 
 
-exports.updateBannerCtrl = async (req, res) => {
+module.exports.updateBannerCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -167,7 +167,7 @@ exports.updateBannerCtrl = async (req, res) => {
     }
 }
 
-exports.deleteBannerCtrl = async (req, res) => {
+module.exports.deleteBannerCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 

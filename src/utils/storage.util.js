@@ -1,7 +1,7 @@
 const { DeleteObjectCommand, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
 const { s3Client, Bucket } = require("../middlewares/storage.middleware.js");
 
-exports.deleteFileFromDO = async (key) => {
+module.exports.deleteFileFromDO = async (key) => {
     try {
         const deleteCommand = new DeleteObjectCommand({
             Bucket: Bucket,
@@ -17,7 +17,7 @@ exports.deleteFileFromDO = async (key) => {
 }
 
 
-exports.deleteMultipleFilesFromDO = async (keys) => {
+module.exports.deleteMultipleFilesFromDO = async (keys) => {
     try {
         if (!keys || keys.length === 0) {
             console.log("No keys provided for deletion.");
