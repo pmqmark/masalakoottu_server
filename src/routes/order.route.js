@@ -2,7 +2,8 @@ const { checkoutCtrl, updateOrderCtrl, getOrderCtrl, getMyOrdersCtrl,
     getAllOrdersCtrl, cancelMyOrderCtrl, returnMyOrderCtrl,
     getMySingleOrderCtrl, checkOrderPayStatusCtrl,
     refundRequestToPGCtrl,
-    getRefundStatusCtrl } = require('../controllers/order.controller');
+    getRefundStatusCtrl, 
+    fetchCheckoutDataCtrl} = require('../controllers/order.controller');
 const { authMiddleware } = require('../middlewares/auth.middleware');
 const { roleChecker } = require('../middlewares/roleChecker.middleware');
 const { validate } = require("../middlewares/validate.middleware");
@@ -16,6 +17,7 @@ orderRouter.use(authMiddleware)
 orderRouter.use(roleChecker(['user', 'admin']))
 
 // Below route involves call to Phonepe server
+orderRouter.post('/fetch-checkout', fetchCheckoutDataCtrl)
 orderRouter.post('/checkout', orderValidator.create, validate, checkoutCtrl)
 
 orderRouter.get('/own', getMyOrdersCtrl)

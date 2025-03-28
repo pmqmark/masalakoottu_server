@@ -57,11 +57,9 @@ const productSchema = new Schema(
       },
     ],
 
-    // stock: {
-    //   type: Number,
-    //   default: 0,
-    //   min: 0,
-    // },
+    weight: {
+      type: Number,
+    },
 
     reviews: [
       {
@@ -128,8 +126,8 @@ const productSchema = new Schema(
           },
         },
         quantity: { type: Number, required: true, min: 0 },
-        manufacturedDate: { type: Date },
-        expiryDate: { type: Date },
+        mfgDate: { type: Date },
+        expDate: { type: Date },
       },
     ],
 

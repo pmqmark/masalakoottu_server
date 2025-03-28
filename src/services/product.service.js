@@ -53,8 +53,8 @@ module.exports.decrementProductQty = async (cart) => {
         if (product.batches.length > 0) {
             // Batch-based stock reduction (FEFO)
             product.batches = product.batches
-                .filter(batch => batch.quantity > 0 && batch.expiryDate > new Date())
-                .sort((a, b) => a.expiryDate - b.expiryDate);
+                .filter(batch => batch.quantity > 0 && batch.expDate > new Date())
+                .sort((a, b) => a.expDate - b.expDate);
 
             for (let batch of product.batches) {
                 if (remainingQuantity === 0) break;
@@ -200,6 +200,7 @@ module.exports.getBuyNowItem = async (productId, quantity = 1, variations = []) 
         }),
         stock: productStock,
         stockStatus,
+        weight: product.weight,
     };
 };
 

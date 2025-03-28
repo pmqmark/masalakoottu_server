@@ -5,9 +5,10 @@ const { saveOrder, onlinePayment, updateOrder, findManyOrders, getOrderById,
     sendRefundRequestToPhonepe,
     fetchRefundStatusFromPhonepe } = require("../services/order.service");
 const { decrementProductQty, getBuyNowItem, stockChecker } = require("../services/product.service");
-const { getCart, getUserById } = require("../services/user.service");
+const { getCart, getUserById, fetchOneAddress } = require("../services/user.service");
 const { addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
 const moment = require("moment");
+const { getPincodeServicibility, calculateShippingCost } = require("../services/logistics.service");
 
 
 module.exports.checkoutCtrl = async (req, res) => {
@@ -563,3 +564,53 @@ module.exports.getRefundStatusCtrl = async (req, res) => {
         })
     }
 }
+
+module.exports.fetchCheckoutDataCtrl = async (req, res) => {
+    try {
+        const { userId } = req.user;
+        const o_pin = 'Origin pin of seller'
+
+        const {md, cgm, d_pin, ss} = req.body
+
+        const cart = await getCart(userId)
+
+        const address = await fetchOneAddress({ userId })
+
+        let pincodeServicibility = false;
+        if (address?.pincode) {
+            const pincode = address?.pincode
+            pincodeServicibility = await getPincodeServicibility(pincode)
+        }
+
+        let shippingCost = 0;
+        if (pincodeServicibility) {
+            const params = { md, cgm, o_pin, d_pin, ss }
+
+            shippingCost = await calculateShippingCost(params)
+        }
+
+        const subtotal = cart.reduce((total, item) => {
+            const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
+            return total + ((item.price + extraCharges) * item.quantity);
+        }, 0);
+
+        const totalTax = cart.reduce((total, item) => {
+            const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
+            return total + (((item.price + extraCharges) * item.quantity) * (item.tax / 100));
+        }, 0);
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { cart, subtotal, totalTax, pincodeServicibility, shippingCost},
+            error: null
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+};

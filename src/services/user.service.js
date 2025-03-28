@@ -31,12 +31,12 @@ module.exports.getUserByGoogleId = async (sub) => {
 }
 
 module.exports.getUserById = async (id) => {
-    return await User.findById(id, {password:0, cart:0}).lean();
+    return await User.findById(id, { password: 0, cart: 0 }).lean();
 }
 
 module.exports.getManyUsers = async (filters) => {
-    return await User.find(filters, {password:0, cart:0})
-    .sort({createdAt: -1});
+    return await User.find(filters, { password: 0, cart: 0 })
+        .sort({ createdAt: -1 });
 }
 
 module.exports.updateUser = async (id, updateObj) => {
@@ -58,7 +58,7 @@ module.exports.updatePassword = async (id, password) => {
     }, { new: true })
 }
 
-module.exports.addToCart = async (userId, productId, quantity, variations=[]) => {
+module.exports.addToCart = async (userId, productId, quantity, variations = []) => {
     const user = await User.findById(userId)
     let cart = user.cart;
 
@@ -108,7 +108,7 @@ module.exports.getCart = async (userId) => {
     const user = await User.findById(userId)
         .populate({
             path: 'cart.productId',
-            select: 'name price stock thumbnail tax variations',
+            select: 'name price weight batches thumbnail tax variations',
             populate: {
                 path: 'variations.options',
                 select: 'optionId additionalPrice'
@@ -124,12 +124,14 @@ module.exports.getCart = async (userId) => {
         const product = item?.productId || {};
         const variations = product?.variations || [];
 
-        let stockStatus = 'AVAILABLE'       
+        const productStock = product?.batches?.reduce((sum, batch) => sum + batch?.quantity, 0);
 
-        if(product.stock <= 0){
+        let stockStatus = 'AVAILABLE'
+
+        if (productStock <= 0) {
             stockStatus = 'OUT_OF_STOCK'
         }
-        else if(product.stock < item.quantity){
+        else if (productStock < item.quantity) {
             stockStatus = 'INSUFFICIENT'
         }
 
@@ -142,8 +144,9 @@ module.exports.getCart = async (userId) => {
             tax: product?.tax || 0,
             thumbnail: product.thumbnail || null,
             variations: [],
-            stock: product.stock,
+            stock: productStock,
             stockStatus,
+            weight: product.weight,
         };
 
         const cartItemVariations = item.variations || [];
@@ -247,3 +250,4 @@ module.exports.deleteAddress = async (id) => {
 module.exports.countUsers = async (filters = {}) => {
     return await User.countDocuments(filters)
 }
+

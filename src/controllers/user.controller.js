@@ -4,7 +4,7 @@ const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, get
     addToWishlist, createAddress, updateAddress, deleteAddress, fetchManyAddress,
     fetchSingleAddress,
     updateCart,
-    fetchOneAddress } = require("../services/user.service");
+    fetchOneAddress, } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
@@ -864,7 +864,6 @@ module.exports.deleteAddresssesCtrl = async (req, res) => {
         })
     }
 }
-
 
 
 
