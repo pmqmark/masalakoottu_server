@@ -21,7 +21,7 @@ module.exports.getManyProducts = async (filters = {}, project = {}) => {
         .populate("reviews.userId", "firstName lastName")
         .populate("variations.variationId", "name")
         .populate("variations.options.optionId", "value")
-        .sort({createdAt: -1})
+        .sort({ createdAt: -1 })
         .lean()
 }
 
@@ -38,19 +38,49 @@ module.exports.updateProductStatus = async (id, isArchived) => {
 }
 
 module.exports.decrementProductQty = async (cart) => {
-    const productUpdates = cart?.map(async (item) => {
+    const productUpdates = cart.map(async (item) => {
         const productId = item?.productId;
-        const quantity = item?.quantity;
+        const quantityToSell = item?.quantity;
 
-        return await Product.findOneAndUpdate(
-            { _id: productId, stock: { $gte: quantity } },
-            { $inc: { stock: -quantity } }
-        );
+        const product = await Product.findById(productId);
+        if (!product) {
+            console.log(`Product ${productId} not found`);
+            return;
+        }
 
-    })
+        let remainingQuantity = quantityToSell;
+
+        if (product.batches.length > 0) {
+            // Batch-based stock reduction (FEFO)
+            product.batches = product.batches
+                .filter(batch => batch.quantity > 0 && batch.expiryDate > new Date())
+                .sort((a, b) => a.expiryDate - b.expiryDate);
+
+            for (let batch of product.batches) {
+                if (remainingQuantity === 0) break;
+
+                if (batch.quantity >= remainingQuantity) {
+                    batch.quantity -= remainingQuantity;
+                    remainingQuantity = 0;
+                } else {
+                    remainingQuantity -= batch.quantity;
+                    batch.quantity = 0;
+                }
+            }
+        }
+
+        if (remainingQuantity > 0) {
+            console.log(`Not enough stock available for product ${productId}`);
+            return;
+        }
+
+        await product.save();
+        console.log(`Sold ${quantityToSell} units of product ${productId} successfully!`);
+    });
 
     await Promise.all(productUpdates);
-}
+};
+
 
 
 module.exports.createVariation = async (obj) => {
@@ -143,14 +173,16 @@ module.exports.getBuyNowItem = async (productId, quantity = 1, variations = []) 
         product.variations?.map(v => [v.variationId.toString(), v.options]) || []
     );
 
-    let stockStatus = 'AVAILABLE'       
+    const productStock = await this.getProductStock(productId)
 
-        if(product.stock <= 0){
-            stockStatus = 'OUT_OF_STOCK'
-        }
-        else if(product.stock < item.quantity){
-            stockStatus = 'INSUFFICIENT'
-        }
+    let stockStatus = 'AVAILABLE'
+
+    if (productStock <= 0) {
+        stockStatus = 'OUT_OF_STOCK'
+    }
+    else if (productStock < item.quantity) {
+        stockStatus = 'INSUFFICIENT'
+    }
 
     return {
         productId,
@@ -166,7 +198,7 @@ module.exports.getBuyNowItem = async (productId, quantity = 1, variations = []) 
                 additionalPrice: prodOpt?.additionalPrice || 0
             };
         }),
-        stock: product.stock,
+        stock: productStock,
         stockStatus,
     };
 };
@@ -175,11 +207,13 @@ module.exports.getBuyNowItem = async (productId, quantity = 1, variations = []) 
 module.exports.stockChecker = async (items) => {
     for (const item of items) {
         const product = await Product.findById(item.productId);
+        const productStock = await this.getProductStock(item.productId)
+
         if (!product) {
             return { success: false, reason: 'Product not found', productId: item.productId };
         }
-        if (product.stock < item.quantity) {
-            return { success: false, reason: 'Insufficient stock', productId: item.productId, availableStock: product.stock };
+        if (productStock < item.quantity) {
+            return { success: false, reason: 'Insufficient stock', productId: item.productId, availableStock: productStock };
         }
     }
 
@@ -199,7 +233,7 @@ module.exports.addExtrasNTaxToPrice = (item) => {
 }
 
 
-module.exports.bulkInsertProducts = async(file)=>{
+module.exports.bulkInsertProducts = async (file) => {
     const results = [];
 
     const stream = Readable.from(file.buffer);
@@ -212,16 +246,16 @@ module.exports.bulkInsertProducts = async(file)=>{
                 hsn: row.hsn,
                 tax: row.tax,
                 brand: row.brand,
-                stock: 100
+                batches: [{ quantity: 100 }]
             });
         })
         .on('end', async () => {
-            
-                console.log({results})
 
-                await Product.insertMany(results);
+            console.log({ results })
 
-                console.log({ message: `${results.length} products inserted successfully.` })
+            await Product.insertMany(results);
+
+            console.log({ message: `${results.length} products inserted successfully.` })
         })
         .on('error', (err) => {
             console.error('CSV parsing error:', err);
@@ -233,7 +267,7 @@ module.exports.bulkInsertProducts = async(file)=>{
 module.exports.getProductStock = async (productId) => {
     const product = await Product.findById(productId);
     if (!product) return 0;
-  
+
     const totalStock = product.batches.reduce((sum, batch) => sum + batch.quantity, 0);
     return totalStock;
-  };
+};

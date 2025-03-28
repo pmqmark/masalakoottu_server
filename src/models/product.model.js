@@ -57,11 +57,11 @@ const productSchema = new Schema(
       },
     ],
 
-    stock: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
+    // stock: {
+    //   type: Number,
+    //   default: 0,
+    //   min: 0,
+    // },
 
     reviews: [
       {
@@ -117,9 +117,18 @@ const productSchema = new Schema(
 
     batches: [
       {
-        batchNumber: { type: String, required: true, unique: true }, 
-        quantity: { type: Number, required: true, min: 0 }, 
-        manufacturedDate: { type: Date }, 
+        batchNumber: {
+          type: String,
+          required: true,
+          default: function () {
+            const today = new Date();
+            const formattedDate = today.toISOString().slice(2, 10).replace(/-/g, "");
+            const randomNum = Math.floor(100 + Math.random() * 900);
+            return `DEFAULT-${formattedDate}-${randomNum}`;
+          },
+        },
+        quantity: { type: Number, required: true, min: 0 },
+        manufacturedDate: { type: Date },
         expiryDate: { type: Date },
       },
     ],
