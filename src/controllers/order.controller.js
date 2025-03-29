@@ -568,9 +568,11 @@ module.exports.getRefundStatusCtrl = async (req, res) => {
 module.exports.fetchCheckoutDataCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
-        const o_pin = 'Origin pin of seller'
+        const originPin = 'Origin pin of seller'
 
-        const {md, cgm, d_pin, ss} = req.body
+        // https://one.delhivery.com/developer-portal/document/b2c/detail/calculate-shipping-cost
+        
+        const { billMode, weight, pincode, shipStatus } = req.body
 
         const cart = await getCart(userId)
 
@@ -584,7 +586,13 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
 
         let shippingCost = 0;
         if (pincodeServicibility) {
-            const params = { md, cgm, o_pin, d_pin, ss }
+            const params = {
+                md: billMode,
+                cgm: weight,
+                o_pin: originPin,
+                d_pin: pincode,
+                ss: shipStatus,
+            }
 
             shippingCost = await calculateShippingCost(params)
         }
@@ -602,7 +610,7 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: 'success',
-            data: { cart, subtotal, totalTax, pincodeServicibility, shippingCost},
+            data: { cart, subtotal, totalTax, pincodeServicibility, shippingCost },
             error: null
         });
     } catch (error) {
