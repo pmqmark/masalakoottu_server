@@ -581,7 +581,12 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
         let pincodeServicibility = false;
         if (address?.pincode) {
             const pincode = address?.pincode
-            pincodeServicibility = await getPincodeServicibility(pincode)
+
+            try {
+                pincodeServicibility = await getPincodeServicibility(pincode)
+            } catch (error) {
+                console.log(error)
+            }
         }
 
         let shippingCost = 0;
@@ -594,7 +599,11 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
                 ss: shipStatus,
             }
 
-            shippingCost = await calculateShippingCost(params)
+            try {
+                shippingCost = await calculateShippingCost(params)
+            } catch (error) {
+                console.log(error)
+            }
         }
 
         const subtotal = cart.reduce((total, item) => {
@@ -614,6 +623,7 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
             error: null
         });
     } catch (error) {
+        console.log(error)
         return res.status(500).json({
             success: false,
             message: "Internal Server error",
