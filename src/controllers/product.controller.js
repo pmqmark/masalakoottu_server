@@ -191,10 +191,12 @@ module.exports.getProductByIdCtrl = async (req, res) => {
             throw new Error('FAILED')
         }
 
+        const productStock = product?.batches?.reduce((sum, batch) => sum + batch?.quantity, 0);
+
         return res.status(200).json({
             success: true,
             message: 'success',
-            data: { product },
+            data: { product: { ...product, stock: productStock } },
             error: null
         })
 

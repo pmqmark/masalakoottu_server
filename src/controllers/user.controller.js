@@ -465,7 +465,7 @@ module.exports.addToCartCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
-        const { productId, quantity, variations } = req.body;
+        const { productId, quantity, variations=[] } = req.body;
 
         if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
             return res.status(400).json({
@@ -487,6 +487,8 @@ module.exports.addToCartCtrl = async (req, res) => {
             })
         }
 
+        console.log({userId, productId, quantity, variations})
+
         await addToCart(userId, productId, quantity, variations);
 
         const cart = await getCart(userId)
@@ -502,7 +504,7 @@ module.exports.addToCartCtrl = async (req, res) => {
         console.error(error)
         res.status(500).json({
             success: false,
-            message: "Internal Server error",
+            message: error?.message || "Internal Server error",
             data: null,
             error: 'INTERNAL_SERVER_ERROR'
         })

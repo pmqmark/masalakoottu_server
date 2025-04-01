@@ -23,6 +23,14 @@ module.exports.authMiddleware = (req, res, next) => {
             req.user = user;
             next();
         }
+        else{
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized',
+                data: null,
+                error: 'UNAUTHORIZED'
+            })
+        }
     } catch (error) {
         console.log(error)
 

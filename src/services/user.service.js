@@ -60,9 +60,14 @@ module.exports.updatePassword = async (id, password) => {
 
 module.exports.addToCart = async (userId, productId, quantity, variations = []) => {
     const user = await User.findById(userId)
-    let cart = user.cart;
 
-    const itemIndex = cart.findIndex(item =>
+    if (!user) {
+        throw new Error('User not found')
+    }
+
+    let cart = user?.cart;
+
+    const itemIndex = cart?.findIndex(item =>
         item.productId.toString() === productId &&
         _.isEqual(normalizeVariations(item.variations), normalizeVariations(variations))
     );
