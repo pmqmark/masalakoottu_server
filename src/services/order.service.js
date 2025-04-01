@@ -5,17 +5,17 @@ const { phonePeApi } = require("../services/pg.service");
 
 const ClientURL = process.env.ClientURL;
 
-exports.saveOrder = async (obj) => {
+module.exports.saveOrder = async (obj) => {
     return await Order.create(obj);
 }
 
-exports.clearCart = async (userId) => {
+module.exports.clearCart = async (userId) => {
     return await User.findByIdAndUpdate(userId, {
         $set: { cart: [] }
     }, { new: true })
 }
 
-exports.onlinePayment = async (merchantOrderId, user, amount) => {
+module.exports.onlinePayment = async (merchantOrderId, user, amount) => {
 
     const payload = {
         "merchantOrderId": `${merchantOrderId}`,
@@ -43,23 +43,23 @@ exports.onlinePayment = async (merchantOrderId, user, amount) => {
 }
 
 
-exports.checkOrderPayStatusWithPG = async (merchantOrderId) => {
+module.exports.checkOrderPayStatusWithPG = async (merchantOrderId) => {
     const response = await phonePeApi.get(`/checkout/v2/order/${merchantOrderId}/status`)
 
     return response
 }
 
-exports.updateOrder = async (id, updateObj) => {
+module.exports.updateOrder = async (id, updateObj) => {
     return await Order.findByIdAndUpdate(id, {
         $set: updateObj
     }, { new: true })
 }
 
-exports.getOrderByMOId = async (merchantOrderId) => {
+module.exports.getOrderByMOId = async (merchantOrderId) => {
     return await Order.findOne({ merchantOrderId }).lean()
 }
 
-exports.getOrderById = async (id) => {
+module.exports.getOrderById = async (id) => {
     return await Order.findById(id)
         .populate("userId", "firstName lastName email mobile")
         .populate("billAddress")
@@ -68,7 +68,7 @@ exports.getOrderById = async (id) => {
 }
 
 
-exports.findManyOrders = async (filters = {}, project = {}) => {
+module.exports.findManyOrders = async (filters = {}, project = {}) => {
     return await Order.find(filters, project)
         .populate("userId", "firstName lastName email mobile")
         .populate("billAddress")
@@ -77,23 +77,23 @@ exports.findManyOrders = async (filters = {}, project = {}) => {
 }
 
 
-exports.cancelMyOrder = async (orderId) => {
+module.exports.cancelMyOrder = async (orderId) => {
     return await Order.findByIdAndUpdate(orderId, {
         $set: { status: 'cancelled' }
     }, { new: true })
 }
 
-exports.returnMyOrder = async (orderId) => {
+module.exports.returnMyOrder = async (orderId) => {
     return await Order.findByIdAndUpdate(orderId, {
         $set: { status: 'returned' }
     }, { new: true })
 }
 
-exports.countOrders = async (filters = {}) => {
+module.exports.countOrders = async (filters = {}) => {
     return await Order.countDocuments(filters)
 }
 
-exports.orderStatusAndCountHandler = async () => {
+module.exports.orderStatusAndCountHandler = async () => {
     if (!Array.isArray(orderStatusList) || orderStatusList.length === 0) {
         throw new Error("orderStatusList is empty or not an array");
     }
@@ -111,13 +111,13 @@ exports.orderStatusAndCountHandler = async () => {
 }
 
 
-exports.sendRefundRequestToPhonepe = async (postObj) => {
+module.exports.sendRefundRequestToPhonepe = async (postObj) => {
     const response = await phonePeApi.post("/payments/v2/refund", postObj)
 
     return response
 }
 
-exports.fetchRefundStatusFromPhonepe = async (merchantRefundId) => {
+module.exports.fetchRefundStatusFromPhonepe = async (merchantRefundId) => {
     const response = await phonePeApi.get(`/payments/v2/refund/${merchantRefundId}/status`)
 
     return response

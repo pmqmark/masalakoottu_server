@@ -1,6 +1,6 @@
 const { fetchOneAddress } = require("../services/user.service");
 
-exports.addBillnShipAddress = async (req, res, next) => {
+module.exports.addBillnShipAddress = async (req, res, next) => {
     try {
         const { userId } = req.user;
 

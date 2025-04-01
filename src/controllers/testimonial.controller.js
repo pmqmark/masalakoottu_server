@@ -2,7 +2,7 @@ const { isValidObjectId } = require("mongoose");
 const { createTestimonial, updateTestimonial, getTestimonialById, getManyTestimonials, deleteTestimonial } = require("../services/testimonial.service");
 const { deleteFileFromDO } = require("../utils/storage.util");
 
-exports.createTestimonialCtrl = async (req, res) => {
+module.exports.createTestimonialCtrl = async (req, res) => {
     try {
         const createObj = req.body;
 
@@ -29,7 +29,7 @@ exports.createTestimonialCtrl = async (req, res) => {
     }
 }
 
-exports.getTestimonialByIdCtrl = async (req, res) => {
+module.exports.getTestimonialByIdCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -66,7 +66,7 @@ exports.getTestimonialByIdCtrl = async (req, res) => {
     }
 }
 
-exports.getManyTestimonialsCtrl = async (req, res, next) => {
+module.exports.getManyTestimonialsCtrl = async (req, res, next) => {
     try {
         let { page, entries } = req.query;
         page = parseInt(page);
@@ -109,7 +109,7 @@ exports.getManyTestimonialsCtrl = async (req, res, next) => {
 }
 
 
-exports.updateTestimonialCtrl = async (req, res) => {
+module.exports.updateTestimonialCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -167,7 +167,7 @@ exports.updateTestimonialCtrl = async (req, res) => {
     }
 }
 
-exports.deleteTestimonialCtrl = async (req, res) => {
+module.exports.deleteTestimonialCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 

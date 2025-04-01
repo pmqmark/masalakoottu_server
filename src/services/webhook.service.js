@@ -3,7 +3,7 @@ const { getOrderByMOId, updateOrder, clearCart } = require('./order.service');
 const { addUserIdToCoupon } = require('./discount.service');
 const { decrementProductQty } = require('./product.service');
 
-exports.verifyPhonePeHash = async (phonePeHash) => {
+module.exports.verifyPhonePeHash = async (phonePeHash) => {
     const username = process.env.PG_USERNAME;
     const password = process.env.PG_PASSWORD;
 
@@ -19,7 +19,7 @@ exports.verifyPhonePeHash = async (phonePeHash) => {
 }
 
 
-exports.checkoutOrderCompletedHandler = async (payload) => {
+module.exports.checkoutOrderCompletedHandler = async (payload) => {
     console.log({ payload })
 
     const { merchantOrderId, orderId, paymentDetails } = payload;
@@ -50,7 +50,7 @@ exports.checkoutOrderCompletedHandler = async (payload) => {
 }
 
 
-exports.checkoutOrderFailedHandler = async (payload) => {
+module.exports.checkoutOrderFailedHandler = async (payload) => {
     console.log({ payload })
 
     const { merchantOrderId, orderId, paymentDetails } = payload;
@@ -74,7 +74,7 @@ exports.checkoutOrderFailedHandler = async (payload) => {
 
 }
 
-exports.pgRefundAcceptedHandler = async (payload) => {
+module.exports.pgRefundAcceptedHandler = async (payload) => {
     console.log({ payload })
 
     const { originalMerchantOrderId, paymentDetails, amount } = payload;
@@ -99,7 +99,7 @@ exports.pgRefundAcceptedHandler = async (payload) => {
 
 }
 
-exports.pgRefundCompletedHandler = async (payload) => {
+module.exports.pgRefundCompletedHandler = async (payload) => {
     console.log({ payload })
 
     const { originalMerchantOrderId, paymentDetails, amount } = payload;
@@ -125,7 +125,7 @@ exports.pgRefundCompletedHandler = async (payload) => {
 
 }
 
-exports.pgRefundFailedHandler = async (payload) => {
+module.exports.pgRefundFailedHandler = async (payload) => {
     console.log({ payload })
 
     const { originalMerchantOrderId, paymentDetails, amount } = payload;

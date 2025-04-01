@@ -2,7 +2,7 @@ const { isValidObjectId } = require("mongoose");
 const { createCategory, updateCategory, updateCategoryStatus, getCategoryById, getManyCategories } = require("../services/category.service");
 const { deleteFileFromDO } = require("../utils/storage.util");
 
-exports.createCategoryCtrl = async (req, res) => {
+module.exports.createCategoryCtrl = async (req, res) => {
     try {
         const {parent, name, description,productIds,
             image, isArchived } = req.body;
@@ -36,7 +36,7 @@ exports.createCategoryCtrl = async (req, res) => {
     }
 }
 
-exports.updateCategoryCtrl = async (req, res, next) => {
+module.exports.updateCategoryCtrl = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -94,7 +94,7 @@ exports.updateCategoryCtrl = async (req, res, next) => {
     }
 }
 
-exports.updateCategoryStatusCtrl = async (req, res, next) => {
+module.exports.updateCategoryStatusCtrl = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -150,7 +150,7 @@ exports.updateCategoryStatusCtrl = async (req, res, next) => {
 }
 
 
-exports.getCategoryByIdCtrl = async (req, res) => {
+module.exports.getCategoryByIdCtrl = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -189,7 +189,7 @@ exports.getCategoryByIdCtrl = async (req, res) => {
 
 
 
-exports.getManyCategoriesCtrl = async (req, res, next) => {
+module.exports.getManyCategoriesCtrl = async (req, res, next) => {
     try {
         let { page, entries } = req.query;
         page = parseInt(page);
@@ -235,7 +235,7 @@ exports.getManyCategoriesCtrl = async (req, res, next) => {
 }
 
 
-exports.getAllCategorysCtrl = async (req, res, next) => {
+module.exports.getAllCategorysCtrl = async (req, res, next) => {
     try {
         let { page, entries } = req.query;
         page = parseInt(page);

@@ -3,16 +3,16 @@ const indianNumberRegex = /^(?:\+91[\s-]?|91[\s-]?)?[6-9]\d{9}$/;
 const mobileRegex = /^[6-9]\d{9}$/;
 const googleIdRegex = /^\d{21}$/;
 
-exports.validateEmail = (email) => {
+module.exports.validateEmail = (email) => {
     return emailRegex.test(email);
 };
 
-exports.validateMobile = (mobile) => {
+module.exports.validateMobile = (mobile) => {
     return mobileRegex.test(mobile);
 };
 
 
-exports.credTypeFinder = (cred) => {
+module.exports.credTypeFinder = (cred) => {
     if (emailRegex.test(cred)) {
         return 'email';
     }

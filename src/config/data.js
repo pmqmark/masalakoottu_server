@@ -1,21 +1,21 @@
-exports.credTypeList = ['email', 'mobile', 'googleId']
+module.exports.credTypeList = ['email', 'mobile', 'googleId']
 
-exports.genderList = ['male', 'female', 'other']
+module.exports.genderList = ['male', 'female', 'other']
 
-exports.roleList = ['user', 'admin'];
+module.exports.roleList = ['user', 'admin'];
 
-exports.payModeList = ['COD', 'ONLINE'];
+module.exports.payModeList = ['COD', 'ONLINE'];
 
-exports.payStatusList = ['pending', 'completed', 'failed', 'refunded'];
+module.exports.payStatusList = ['pending', 'completed', 'failed', 'refunded'];
 
-exports.orderStatusList = ['processing', 'billed', 'packed', 'shipped', 'delivered', 'cancelled', 'returned']
+module.exports.orderStatusList = ['processing', 'billed', 'packed', 'shipped', 'delivered', 'cancelled', 'returned']
 
-exports.deliveryTypeList = ['Standard', 'Express']
+module.exports.deliveryTypeList = ['Standard', 'Express']
 
-exports.enquiryTypeList = ['Contact']
+module.exports.enquiryTypeList = ['Contact']
 
-exports.discountTypeList = ["percentage", "fixed"]
+module.exports.discountTypeList = ["percentage", "fixed"]
 
-exports.buyModeList = ['later', 'now'];
+module.exports.buyModeList = ['later', 'now'];
 
-exports.refundStatusList = ['none', 'requested', 'accepted', 'in_process', 'completed', 'failed'] 
+module.exports.refundStatusList = ['none', 'requested', 'accepted', 'in_process', 'completed', 'failed'] 

@@ -1,35 +1,35 @@
 const { Category } = require("../models/category.model")
 const { Discount } = require("../models/discount.model")
 
-exports.createDiscount = async (obj) => {
+module.exports.createDiscount = async (obj) => {
     return await Discount.create(obj)
 }
 
-exports.getDiscounts = async (filters, projects) => {
+module.exports.getDiscounts = async (filters, projects) => {
     return await Discount.find(filters, projects)
     .populate("applicableProducts", "name price thumbnail")
     .populate("applicableCategories", "name image")
 }
 
-exports.getDiscountsById = async (id) => {
+module.exports.getDiscountsById = async (id) => {
     return await Discount.findById(id, {usedBy: 0})
     .populate("applicableProducts", "name price thumbnail")
     .populate("applicableCategories", "name image")
 }
 
-exports.updateDiscount = async (id, obj) => {
+module.exports.updateDiscount = async (id, obj) => {
     return await Discount.findByIdAndUpdate(id, obj, { new: true, runValidators: true });
 }
 
-exports.addUserIdToCoupon = async (code, userId) => {
+module.exports.addUserIdToCoupon = async (code, userId) => {
     return await Discount.updateOne({ code }, { $push: { usedBy: userId } });
 }
 
-exports.deleteDiscount = async (id) => {
+module.exports.deleteDiscount = async (id) => {
     return await Discount.findByIdAndDelete(id)
 }
 
-exports.applyAutomaticDiscounts = async (items = []) => {
+module.exports.applyAutomaticDiscounts = async (items = []) => {
     let totalDiscountAmount = 0;
     let discountMessages = [];
 
@@ -84,7 +84,7 @@ exports.applyAutomaticDiscounts = async (items = []) => {
     };
 };
 
-exports.applyCouponDiscount = async (userId, couponCode = "", amount = 0) => {
+module.exports.applyCouponDiscount = async (userId, couponCode = "", amount = 0) => {
     let discountAmount = 0, discountMessage = "";
 
     const discountResponse = await Discount.findOne({ code: couponCode, isActive: true });
@@ -119,7 +119,7 @@ exports.applyCouponDiscount = async (userId, couponCode = "", amount = 0) => {
 }
 
 
-exports.applyAutoDiscountToAProduct = async (productId) => {
+module.exports.applyAutoDiscountToAProduct = async (productId) => {
     let discountMessages = [];
 
     const discounts = await Discount.find({ appliesAutomatically: true, isActive: true });

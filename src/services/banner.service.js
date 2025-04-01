@@ -1,21 +1,21 @@
 const { Banner } = require("../models/banner.model")
 
-exports.createBanner = async (obj) => {
+module.exports.createBanner = async (obj) => {
     return await Banner.create(obj)
 }
 
-exports.getBannerById = async (id) => {
+module.exports.getBannerById = async (id) => {
     return await Banner.findById(id)
 }
 
-exports.getManyBanners = async (filters) => {
+module.exports.getManyBanners = async (filters) => {
     return await Banner.find(filters)
 }
 
-exports.updateBanner = async (id, obj) => {
+module.exports.updateBanner = async (id, obj) => {
     return await Banner.findByIdAndUpdate(id, { $set: obj }, { new: true })
 }
 
-exports.deleteBanner = async (id) => {
+module.exports.deleteBanner = async (id) => {
     return await Banner.findByIdAndDelete(id)
 }

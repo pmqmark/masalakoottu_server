@@ -57,10 +57,8 @@ const productSchema = new Schema(
       },
     ],
 
-    stock: {
+    weight: {
       type: Number,
-      default: 0,
-      min: 0,
     },
 
     reviews: [
@@ -114,6 +112,24 @@ const productSchema = new Schema(
       type: Boolean,
       default: false
     },
+
+    batches: [
+      {
+        batchNumber: {
+          type: String,
+          required: true,
+          default: function () {
+            const today = new Date();
+            const formattedDate = today.toISOString().slice(2, 10).replace(/-/g, "");
+            const randomNum = Math.floor(100 + Math.random() * 900);
+            return `DEFAULT-${formattedDate}-${randomNum}`;
+          },
+        },
+        quantity: { type: Number, required: true, min: 0 },
+        mfgDate: { type: Date },
+        expDate: { type: Date },
+      },
+    ],
 
 
   },

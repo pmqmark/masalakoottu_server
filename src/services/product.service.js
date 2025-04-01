@@ -4,11 +4,11 @@ const { Option } = require("../models/option.model");
 const csv = require('csv-parser');
 const { Readable } = require('stream');
 
-exports.createProduct = async (obj = {}) => {
+module.exports.createProduct = async (obj = {}) => {
     return await Product.create(obj);
 }
 
-exports.getProductById = async (id) => {
+module.exports.getProductById = async (id) => {
     return await Product.findById(id)
         .populate("reviews.userId", "firstName lastName")
         .populate("variations.variationId", "name")
@@ -16,88 +16,118 @@ exports.getProductById = async (id) => {
         .lean()
 }
 
-exports.getManyProducts = async (filters = {}, project = {}) => {
+module.exports.getManyProducts = async (filters = {}, project = {}) => {
     return await Product.find(filters, project)
         .populate("reviews.userId", "firstName lastName")
         .populate("variations.variationId", "name")
         .populate("variations.options.optionId", "value")
-        .sort({createdAt: -1})
+        .sort({ createdAt: -1 })
         .lean()
 }
 
-exports.updateProduct = async (id, obj = {}) => {
+module.exports.updateProduct = async (id, obj = {}) => {
     return await Product.findByIdAndUpdate(id, {
         $set: obj
     }, { new: true })
 }
 
-exports.updateProductStatus = async (id, isArchived) => {
+module.exports.updateProductStatus = async (id, isArchived) => {
     return await Product.findByIdAndUpdate(id, {
         $set: { isArchived }
     }, { new: true })
 }
 
-exports.decrementProductQty = async (cart) => {
-    const productUpdates = cart?.map(async (item) => {
+module.exports.decrementProductQty = async (cart) => {
+    const productUpdates = cart.map(async (item) => {
         const productId = item?.productId;
-        const quantity = item?.quantity;
+        const quantityToSell = item?.quantity;
 
-        return await Product.findOneAndUpdate(
-            { _id: productId, stock: { $gte: quantity } },
-            { $inc: { stock: -quantity } }
-        );
+        const product = await Product.findById(productId);
+        if (!product) {
+            console.log(`Product ${productId} not found`);
+            return;
+        }
 
-    })
+        let remainingQuantity = quantityToSell;
+
+        if (product.batches.length > 0) {
+            // Batch-based stock reduction (FEFO)
+            product.batches = product.batches
+                .filter(batch => batch.quantity > 0 && batch.expDate > new Date())
+                .sort((a, b) => a.expDate - b.expDate);
+
+            for (let batch of product.batches) {
+                if (remainingQuantity === 0) break;
+
+                if (batch.quantity >= remainingQuantity) {
+                    batch.quantity -= remainingQuantity;
+                    remainingQuantity = 0;
+                } else {
+                    remainingQuantity -= batch.quantity;
+                    batch.quantity = 0;
+                }
+            }
+        }
+
+        if (remainingQuantity > 0) {
+            console.log(`Not enough stock available for product ${productId}`);
+            return;
+        }
+
+        await product.save();
+        console.log(`Sold ${quantityToSell} units of product ${productId} successfully!`);
+    });
 
     await Promise.all(productUpdates);
-}
+};
 
 
-exports.createVariation = async (obj) => {
+
+module.exports.createVariation = async (obj) => {
     return await Variation.create(obj)
 }
 
-exports.getOneVariation = async (id) => {
+module.exports.getOneVariation = async (id) => {
     return await Variation.findById(id)
         .populate('options', 'value')
 }
 
-exports.getManyVariation = async (filters) => {
+module.exports.getManyVariation = async (filters) => {
     return await Variation.find(filters)
         .populate('options', 'value')
 }
 
-exports.updateVariation = async (id, obj) => {
+module.exports.updateVariation = async (id, obj) => {
     return await Variation.findByIdAndUpdate(id, { $set: obj }, { new: true })
 }
 
-exports.deleteVariation = async (id) => {
+module.exports.deleteVariation = async (id) => {
     return await Variation.findByIdAndDelete(id)
 }
 
 
-exports.createOption = async (obj) => {
+module.exports.createOption = async (obj) => {
     return await Option.create(obj)
 }
 
-exports.getOneOption = async (id) => {
+module.exports.getOneOption = async (id) => {
     return await Option.findById(id)
 }
 
-exports.getManyOption = async (filters) => {
+module.exports.getManyOption = async (filters) => {
     return await Option.find(filters)
 }
 
-exports.updateOption = async (id, obj) => {
+module.exports.updateOption = async (id, obj) => {
     return await Option.findByIdAndUpdate(id, { $set: obj }, { new: true })
 }
 
-exports.deleteOption = async (id) => {
+module.exports.deleteOption = async (id) => {
     return await Option.findByIdAndDelete(id)
 }
 
 
-exports.checkIfVariationExists = async (productId, variations = []) => {
+module.exports.checkIfVariationExists = async (productId, variations = []) => {
     const product = await Product.findById(productId);
     console.log({ product })
     if (!product) {
@@ -123,7 +153,7 @@ exports.checkIfVariationExists = async (productId, variations = []) => {
 }
 
 
-exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
+module.exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
     const existingVariation = await this.checkIfVariationExists(productId, variations);
     if (!existingVariation) {
         return null;
@@ -143,14 +173,16 @@ exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
         product.variations?.map(v => [v.variationId.toString(), v.options]) || []
     );
 
-    let stockStatus = 'AVAILABLE'       
+    const productStock = await this.getProductStock(productId)
 
-        if(product.stock <= 0){
-            stockStatus = 'OUT_OF_STOCK'
-        }
-        else if(product.stock < item.quantity){
-            stockStatus = 'INSUFFICIENT'
-        }
+    let stockStatus = 'AVAILABLE'
+
+    if (productStock <= 0) {
+        stockStatus = 'OUT_OF_STOCK'
+    }
+    else if (productStock < item.quantity) {
+        stockStatus = 'INSUFFICIENT'
+    }
 
     return {
         productId,
@@ -166,20 +198,23 @@ exports.getBuyNowItem = async (productId, quantity = 1, variations = []) => {
                 additionalPrice: prodOpt?.additionalPrice || 0
             };
         }),
-        stock: product.stock,
+        stock: productStock,
         stockStatus,
+        weight: product.weight,
     };
 };
 
 
-exports.stockChecker = async (items) => {
+module.exports.stockChecker = async (items) => {
     for (const item of items) {
         const product = await Product.findById(item.productId);
+        const productStock = await this.getProductStock(item.productId)
+
         if (!product) {
             return { success: false, reason: 'Product not found', productId: item.productId };
         }
-        if (product.stock < item.quantity) {
-            return { success: false, reason: 'Insufficient stock', productId: item.productId, availableStock: product.stock };
+        if (productStock < item.quantity) {
+            return { success: false, reason: 'Insufficient stock', productId: item.productId, availableStock: productStock };
         }
     }
 
@@ -187,7 +222,7 @@ exports.stockChecker = async (items) => {
 };
 
 
-exports.addExtrasNTaxToPrice = (item) => {
+module.exports.addExtrasNTaxToPrice = (item) => {
     const extraCharges = item.variations?.reduce((acc, elem) => acc + (elem?.additionalPrice || 0), 0) || 0;
     const basePrice = item.price + extraCharges;
     const taxRate = item.tax || 0;
@@ -199,7 +234,7 @@ exports.addExtrasNTaxToPrice = (item) => {
 }
 
 
-exports.bulkInsertProducts = async(file)=>{
+module.exports.bulkInsertProducts = async (file) => {
     const results = [];
 
     const stream = Readable.from(file.buffer);
@@ -212,19 +247,28 @@ exports.bulkInsertProducts = async(file)=>{
                 hsn: row.hsn,
                 tax: row.tax,
                 brand: row.brand,
-                stock: 100
+                batches: [{ quantity: 100 }]
             });
         })
         .on('end', async () => {
-            
-                console.log({results})
 
-                await Product.insertMany(results);
+            console.log({ results })
 
-                console.log({ message: `${results.length} products inserted successfully.` })
+            await Product.insertMany(results);
+
+            console.log({ message: `${results.length} products inserted successfully.` })
         })
         .on('error', (err) => {
             console.error('CSV parsing error:', err);
             throw new Error('CSV parsing failed.')
         });
 }
+
+
+module.exports.getProductStock = async (productId) => {
+    const product = await Product.findById(productId);
+    if (!product) return 0;
+
+    const totalStock = product.batches.reduce((sum, batch) => sum + batch.quantity, 0);
+    return totalStock;
+};

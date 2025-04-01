@@ -2,7 +2,7 @@ const { upload } = require('../middlewares/storage.middleware');
 const endpoint = process.env.DO_SPACES_ENDPOINT;
 const Bucket = process.env.DO_SPACES_BUCKET;
 
-exports.uploadSingleFile = (req, res) => {
+module.exports.uploadSingleFile = (req, res) => {
     upload.single('file')(req, res, (err) => {
         if (err) {
             return res.status(500).json({
@@ -36,7 +36,7 @@ exports.uploadSingleFile = (req, res) => {
     });
 };
 
-exports.uploadMultipleFile = (req, res) => {
+module.exports.uploadMultipleFile = (req, res) => {
     upload.array('files')(req, res, (err) => {
         if (err) {
             return res.status(500).json({

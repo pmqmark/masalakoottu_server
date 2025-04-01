@@ -45,7 +45,7 @@ const OrderSchema = new mongoose.Schema(
       default: 'processing',
     },
 
-    totalTax: { type: Number},
+    totalTax: { type: Number },
     discount: { type: Number, default: 0 },
     deliveryCharge: { type: Number, default: 0 },
     subTotal: { type: Number, required: true },
@@ -63,7 +63,7 @@ const OrderSchema = new mongoose.Schema(
 
         name: { type: String },
         price: { type: Number, required: true },
-        tax: { type: Number , default:0, min:0},
+        tax: { type: Number, default: 0, min: 0 },
         thumbnail: {
           type: {
             location: {
@@ -89,12 +89,16 @@ const OrderSchema = new mongoose.Schema(
     ],
 
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-   
+
 
     billAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
     shipAddress: { type: mongoose.Schema.Types.ObjectId, ref: "Address", required: true },
 
     deliveryType: { type: String, enum: deliveryTypeList, default: 'Standard' },
+
+    waybill: { type: String },
+    delivered_on: { type: Date },
+
   },
   { timestamps: true }
 );

@@ -1,8 +1,10 @@
-const { phonepeWebhookHandler } = require("../controllers/webhook.controller");
+const { phonepeWebhookHandler, delhiveryWebhookHandler } = require("../controllers/webhook.controller");
 
 const webHookRouter = require("express").Router();
 
 webHookRouter.post("/phonepe", phonepeWebhookHandler)
 
+webHookRouter.post("/delhivery", delhiveryWebhookHandler)
 
-module.exports = {webHookRouter}
+
+module.exports = { webHookRouter }

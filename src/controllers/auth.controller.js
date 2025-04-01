@@ -8,7 +8,7 @@ const { comparePasswords } = require("../utils/password.util");
 
 
 // user LOGIN
-exports.userLogin = async (req, res) => {
+module.exports.userLogin = async (req, res) => {
     const { credential, password } = req.body;
 
     try {
@@ -97,7 +97,7 @@ exports.userLogin = async (req, res) => {
 }
 
 // google auth
-exports.googleHandler = async (req, res) => {
+module.exports.googleHandler = async (req, res) => {
     try {
         const { idToken } = req.body;
 
@@ -195,7 +195,7 @@ exports.googleHandler = async (req, res) => {
 };
 
 
-exports.regenerateTokens = async (req, res) => {
+module.exports.regenerateTokens = async (req, res) => {
     const { refreshToken } = req.body;
 
     try {
@@ -236,7 +236,7 @@ exports.regenerateTokens = async (req, res) => {
 }
 
 // mobile/email
-exports.sendOTPHandler = async (req, res) => {
+module.exports.sendOTPHandler = async (req, res) => {
     try {
         const { mobile, email } = req.body;
 
@@ -324,7 +324,7 @@ exports.sendOTPHandler = async (req, res) => {
 }
 
 // mobile/email & otp
-exports.verifyOTPHandler = async (req, res) => {
+module.exports.verifyOTPHandler = async (req, res) => {
     try {
         const { otp, mobile, email } = req.body;
 
@@ -387,7 +387,7 @@ exports.verifyOTPHandler = async (req, res) => {
 
 // In Forgot password ?
 // mobile/email & otp & password
-exports.resetPassword = async (req, res) => {
+module.exports.resetPassword = async (req, res) => {
     try {
         const { otp, mobile, email, password } = req.body;
         if (!otp) {

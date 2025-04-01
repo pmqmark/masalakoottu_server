@@ -5,12 +5,13 @@ const { saveOrder, onlinePayment, updateOrder, findManyOrders, getOrderById,
     sendRefundRequestToPhonepe,
     fetchRefundStatusFromPhonepe } = require("../services/order.service");
 const { decrementProductQty, getBuyNowItem, stockChecker } = require("../services/product.service");
-const { getCart, getUserById } = require("../services/user.service");
+const { getCart, getUserById, fetchOneAddress } = require("../services/user.service");
 const { addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
 const moment = require("moment");
+const { getPincodeServicibility, calculateShippingCost } = require("../services/logistics.service");
 
 
-exports.checkoutCtrl = async (req, res) => {
+module.exports.checkoutCtrl = async (req, res) => {
     try {
         const {
             billAddress, shipAddress, payMode, deliveryType, deliveryCharge = 0,
@@ -164,7 +165,7 @@ exports.checkoutCtrl = async (req, res) => {
 };
 
 
-exports.checkOrderPayStatusCtrl = async (req, res) => {
+module.exports.checkOrderPayStatusCtrl = async (req, res) => {
     try {
         const { orderId } = req.params;
         const order = await getOrderById(orderId);
@@ -198,7 +199,7 @@ exports.checkOrderPayStatusCtrl = async (req, res) => {
 }
 
 
-exports.updateOrderCtrl = async (req, res) => {
+module.exports.updateOrderCtrl = async (req, res) => {
     try {
         const { orderId } = req.params;
         const updateObj = req.body;
@@ -222,7 +223,7 @@ exports.updateOrderCtrl = async (req, res) => {
     }
 }
 
-exports.getOrderCtrl = async (req, res) => {
+module.exports.getOrderCtrl = async (req, res) => {
     try {
         const { orderId } = req.params;
 
@@ -245,7 +246,7 @@ exports.getOrderCtrl = async (req, res) => {
     }
 }
 
-exports.getMySingleOrderCtrl = async (req, res) => {
+module.exports.getMySingleOrderCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
         const { orderId } = req.params;
@@ -277,7 +278,7 @@ exports.getMySingleOrderCtrl = async (req, res) => {
     }
 }
 
-exports.getMyOrdersCtrl = async (req, res) => {
+module.exports.getMyOrdersCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
@@ -301,7 +302,7 @@ exports.getMyOrdersCtrl = async (req, res) => {
     }
 }
 
-exports.getAllOrdersCtrl = async (req, res) => {
+module.exports.getAllOrdersCtrl = async (req, res) => {
     try {
         const { payMode, payStatus, status, deliveryType } = req.query;
         const filters = {}
@@ -339,7 +340,7 @@ exports.getAllOrdersCtrl = async (req, res) => {
 }
 
 // *** Add Code to refund payment ***
-exports.cancelMyOrderCtrl = async (req, res) => {
+module.exports.cancelMyOrderCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
         const { orderId } = req.params;
@@ -392,7 +393,7 @@ exports.cancelMyOrderCtrl = async (req, res) => {
 }
 
 // *** Add Code to refund payment ***
-exports.returnMyOrderCtrl = async (req, res) => {
+module.exports.returnMyOrderCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
         const { orderId } = req.params;
@@ -444,7 +445,7 @@ exports.returnMyOrderCtrl = async (req, res) => {
     }
 }
 
-exports.refundRequestToPGCtrl = async (req, res) => {
+module.exports.refundRequestToPGCtrl = async (req, res) => {
     try {
         const { orderId, amount } = req.body;
 
@@ -523,7 +524,7 @@ exports.refundRequestToPGCtrl = async (req, res) => {
 }
 
 
-exports.getRefundStatusCtrl = async (req, res) => {
+module.exports.getRefundStatusCtrl = async (req, res) => {
     try {
         const { merchantRefundId } = req.params;
 
@@ -563,3 +564,61 @@ exports.getRefundStatusCtrl = async (req, res) => {
         })
     }
 }
+
+module.exports.fetchCheckoutDataCtrl = async (req, res) => {
+    try {
+        const { userId } = req.user;
+        const originPin = 'Origin pin of seller'
+
+        // https://one.delhivery.com/developer-portal/document/b2c/detail/calculate-shipping-cost
+        
+        const { billMode, weight, pincode, shipStatus } = req.body
+
+        const cart = await getCart(userId)
+
+        const address = await fetchOneAddress({ userId })
+
+        let pincodeServicibility = false;
+        if (address?.pincode) {
+            const pincode = address?.pincode
+            pincodeServicibility = await getPincodeServicibility(pincode)
+        }
+
+        let shippingCost = 0;
+        if (pincodeServicibility) {
+            const params = {
+                md: billMode,
+                cgm: weight,
+                o_pin: originPin,
+                d_pin: pincode,
+                ss: shipStatus,
+            }
+
+            shippingCost = await calculateShippingCost(params)
+        }
+
+        const subtotal = cart.reduce((total, item) => {
+            const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
+            return total + ((item.price + extraCharges) * item.quantity);
+        }, 0);
+
+        const totalTax = cart.reduce((total, item) => {
+            const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
+            return total + (((item.price + extraCharges) * item.quantity) * (item.tax / 100));
+        }, 0);
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { cart, subtotal, totalTax, pincodeServicibility, shippingCost },
+            error: null
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+};
