@@ -1,13 +1,14 @@
 const { isValidObjectId } = require("mongoose");
-const { createProduct, updateProduct, updateProductStatus, getProductById, getManyProducts, 
-    createVariation, updateVariation, getOneVariation, deleteVariation, getManyVariation, 
-    createOption, getOneOption, getManyOption, updateOption, deleteOption, bulkInsertProducts 
+const { createProduct, updateProduct, updateProductStatus, getProductById, getManyProducts,
+    createVariation, updateVariation, getOneVariation, deleteVariation, getManyVariation,
+    createOption, getOneOption, getManyOption, updateOption, deleteOption, bulkInsertProducts
 } = require("../services/product.service");
 const { deleteMultipleFilesFromDO, deleteFileFromDO } = require("../utils/storage.util");
+const { getManyCategories } = require("../services/category.service");
 
 module.exports.createProductCtrl = async (req, res) => {
     try {
-        const { 
+        const {
             name, description, brand, price, thumbnail, images,
             batches, reviews, variations, isFeatured, tags, isArchived,
             hsn, tax, weight
@@ -215,7 +216,7 @@ module.exports.getManyProductsCtrl = async (req, res, next) => {
         let { page, entries } = req.query;
         page = parseInt(page);
         entries = parseInt(entries)
-        const { tag, search } = req.query;
+        const { tag, search, category } = req.query;
 
         const filters = { isArchived: false };
 
@@ -229,6 +230,21 @@ module.exports.getManyProductsCtrl = async (req, res, next) => {
 
         if (tag?.trim()) {
             filters.tags = { $in: [tag] }
+        }
+
+        const catFilters = {}
+        if (isValidObjectId(category)) {
+            catFilters.$or = [{ parent: category }, { _id: category }]
+        }
+
+        const cats = await getManyCategories(catFilters)
+
+        console.log({ cats })
+
+        const productIds = cats?.flatMap((cat) => cat?.productIds) ?? []
+
+        if (productIds?.length > 0) {
+            filters._id = { $in: productIds }
         }
 
         let result = await getManyProducts(filters)
