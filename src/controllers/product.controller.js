@@ -241,8 +241,6 @@ module.exports.getManyProductsCtrl = async (req, res, next) => {
 
         const cats = await getManyCategories(catFilters)
 
-        console.log({ cats })
-
         const productIds = cats?.flatMap((cat) => cat?.productIds) ?? []
 
         if (productIds?.length > 0) {
@@ -250,11 +248,15 @@ module.exports.getManyProductsCtrl = async (req, res, next) => {
         }
 
         let result = await getManyProducts(filters)
-        console.log({ result })
 
         if (page && entries) {
             result = result.slice((page - 1) * entries, page * entries)
         }
+
+        result = result?.map((product) => ({
+            ...product,
+            stock: product?.batches?.reduce((sum, batch) => sum + batch?.quantity, 0) ?? 0,
+        }))
 
         return res.status(200).json({
             success: true,
@@ -297,12 +299,16 @@ module.exports.getAllProductsCtrl = async (req, res, next) => {
         }
 
         let result = await getManyProducts(filters)
-        console.log({ result })
 
         if (page && entries) {
             result = result.slice((page - 1) * entries, page * entries)
         }
-
+        
+        result = result?.map((product) => ({
+            ...product,
+            stock: product?.batches?.reduce((sum, batch) => sum + batch?.quantity, 0) ?? 0,
+        }))
+        
         return res.status(200).json({
             success: true,
             message: 'success',

@@ -43,8 +43,8 @@ const productValidator = {
     body("batches").optional().isArray(),
     body("batches.*.batchNumber").optional().isString(),
     body("batches.*.quantity").isInt({ min: 0 }).withMessage("Batch quantity must be at least 0"),
-    body("batches.*.mfgDate").optional().isISO8601().toDate().withMessage("Invalid manufacturing date"),
-    body("batches.*.expDate").optional().isISO8601().toDate().withMessage("Invalid expiry date"),
+    body("batches.*.mfgDate").optional({ values: "falsy" }).isISO8601().toDate().withMessage("Invalid manufacturing date"),
+    body("batches.*.expDate").optional({ values: "falsy" }).isISO8601().toDate().withMessage("Invalid expiry date"),
   ],
 
   update: [
@@ -90,8 +90,8 @@ const productValidator = {
     body("batches").optional().isArray(),
     body("batches.*.batchNumber").optional().isString(),
     body("batches.*.quantity").isInt({ min: 0 }).withMessage("Batch quantity must be at least 0"),
-    body("batches.*.mfgDate").optional().isISO8601().toDate().withMessage("Invalid manufacturing date"),
-    body("batches.*.expDate").optional().isISO8601().toDate().withMessage("Invalid expiry date"),
+    body("batches.*.mfgDate").optional({ values: "falsy" }).isISO8601().toDate().withMessage("Invalid manufacturing date"),
+    body("batches.*.expDate").optional({ values: "falsy" }).isISO8601().toDate().withMessage("Invalid expiry date"),
   ],
 };
 
