@@ -3,7 +3,9 @@ const { payModeList, payStatusList, orderStatusList, deliveryTypeList } = requir
 const { saveOrder, onlinePayment, updateOrder, findManyOrders, getOrderById,
     cancelMyOrder, returnMyOrder, clearCart, checkOrderPayStatusWithPG,
     sendRefundRequestToPhonepe,
-    fetchRefundStatusFromPhonepe } = require("../services/order.service");
+    fetchRefundStatusFromPhonepe,
+    getStaticPincodeServicibility,
+    calculateStaticShipCostByWt } = require("../services/order.service");
 const { decrementProductQty, getBuyNowItem, stockChecker } = require("../services/product.service");
 const { getCart, getUserById, fetchOneAddress } = require("../services/user.service");
 const { addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
@@ -571,21 +573,47 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
         const originPin = 'Origin pin of seller'
 
         // https://one.delhivery.com/developer-portal/document/b2c/detail/calculate-shipping-cost
-        
-        const { billMode, weight, pincode, shipStatus } = req.body
+
+        let { billMode, weight = 0, pincode, shipStatus } = req.body
 
         const cart = await getCart(userId)
+
+        console.log({ cart })
+
+        const cartWeight = cart.reduce((acc, value) => acc + (value?.weight ?? 0), 0)
+
+        if (cartWeight > weight) {
+            weight = cartWeight
+        }
+
+        if (weight <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid weight",
+                data: null,
+                error: 'INVALID_WEIGHT'
+            })
+        }
 
         const address = await fetchOneAddress({ userId })
 
         let pincodeServicibility = false;
         if (address?.pincode) {
-            const pincode = address?.pincode
+            pincode = address?.pincode
 
             try {
-                pincodeServicibility = await getPincodeServicibility(pincode)
+                // pincodeServicibility = await getPincodeServicibility(pincode)
+
+                pincodeServicibility = await getStaticPincodeServicibility(pincode)
             } catch (error) {
                 console.log(error)
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Service not available in this pincode",
+                    data: null,
+                    error: 'NO_SERVICE'
+                })
             }
         }
 
@@ -600,10 +628,26 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
             }
 
             try {
-                shippingCost = await calculateShippingCost(params)
+                // shippingCost = await calculateShippingCost(params)
+
+                shippingCost = await calculateStaticShipCostByWt(pincode, weight)
             } catch (error) {
                 console.log(error)
+                return res.status(400).json({
+                    success: false,
+                    message: error?.message ?? "Failed to get Shipping Cost",
+                    data: null,
+                    error: 'Invalid Shipping Cost'
+                })
             }
+        }
+        else {
+            return res.status(400).json({
+                success: false,
+                message: "Service not available in this pincode",
+                data: null,
+                error: 'NO_SERVICE'
+            })
         }
 
         const subtotal = cart.reduce((total, item) => {

@@ -2,6 +2,8 @@ const { Order } = require("../models/order.model");
 const { User } = require("../models/user.model");
 const { orderStatusList } = require("../config/data");
 const { phonePeApi } = require("../services/pg.service");
+const { Zone } = require("../models/zone.model");
+const { Charge } = require("../models/charge.model");
 
 const ClientURL = process.env.ClientURL;
 
@@ -126,6 +128,37 @@ module.exports.fetchRefundStatusFromPhonepe = async (merchantRefundId) => {
 
 // The following are services to fetch serviceable pincodes and Shipping charges from db (Use Delhivery APIs instead);
 
-module.exports.getStaticPincodeServicibility = async ()=>{
-    const response = await Charge
+module.exports.getStaticPincodeServicibility = async (pincode) => {
+    console.log({pincode})
+    
+    const zone = await Zone.findOne({ pincodes: { $in: [pincode] } })
+
+    if (zone) {
+        return true
+    }
+    else {
+        return false
+    }
+}
+
+module.exports.calculateStaticShipCostByWt = async (pincode, weight) => {
+    const zone = await Zone.findOne({ pincodes: { $in: [pincode] } })
+
+    if (!zone) {
+        throw new Error('Invalid Zone')
+    }
+
+    const charge = await Charge.findOne({ kind: "shipping", basis: "weight", zone: zone?._id })
+
+    if (!charge) {
+        throw new Error('Invalid Charge')
+    }
+
+    const item = charge?.criteria?.find(item => item?.value === weight)
+
+    if (!item) {
+        throw new Error('Invalid Item')
+    }
+
+    return item?.price;
 }
