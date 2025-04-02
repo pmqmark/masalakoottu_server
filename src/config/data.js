@@ -19,3 +19,7 @@ module.exports.discountTypeList = ["percentage", "fixed"]
 module.exports.buyModeList = ['later', 'now'];
 
 module.exports.refundStatusList = ['none', 'requested', 'accepted', 'in_process', 'completed', 'failed'] 
+
+module.exports.chargeKindList = ["shipping"]
+
+module.exports.chargeBasisList = ["weight"]
