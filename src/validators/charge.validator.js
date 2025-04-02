@@ -1,9 +1,17 @@
 const { body } = require("express-validator");
-const { default: mongoose } = require("mongoose");
 const { chargeKindList, chargeBasisList } = require("../config/data");
+
+const allowedFields = ["kind", "basis", "zone", "criteria"];
 
 const chargeValidator = {
   create: [
+    body().customSanitizer((value, { req }) => {
+      req.body = Object.keys(req.body)
+        .filter(key => allowedFields.includes(key))
+        .reduce((obj, key) => ({ ...obj, [key]: req.body[key] }), {});
+      return req.body;
+    }),
+
     body("kind")
       .isString()
       .isIn(chargeKindList)
@@ -16,16 +24,8 @@ const chargeValidator = {
 
     body("zone")
       .optional()
-      .isString()
-      .withMessage("zone must be a string"),
-
-    body("pincodes")
-      .optional()
-      .isArray()
-      .withMessage("pincodes must be an array of strings"),
-    body("pincodes.*")
-      .isString()
-      .withMessage("Each pincode must be a string"),
+      .isMongoId()
+      .withMessage("zone must be a valid id"),
 
     body("criteria")
       .isArray({ min: 1 })
@@ -52,6 +52,13 @@ const chargeValidator = {
   ],
 
   update: [
+    body().customSanitizer((value, { req }) => {
+      req.body = Object.keys(req.body)
+        .filter(key => allowedFields.includes(key))
+        .reduce((obj, key) => ({ ...obj, [key]: req.body[key] }), {});
+      return req.body;
+    }),
+
     body("kind")
       .optional()
       .isString()
@@ -66,18 +73,8 @@ const chargeValidator = {
 
     body("zone")
       .optional()
-      .isString()
-      .withMessage("zone must be a string"),
-
-    body("pincodes")
-      .optional()
-      .isArray()
-      .withMessage("pincodes must be an array of strings"),
-
-    body("pincodes.*")
-      .optional()
-      .isString()
-      .withMessage("Each pincode must be a string"),
+      .isMongoId()
+      .withMessage("zone must be a valid id"),
 
     body("criteria")
       .optional()

@@ -122,3 +122,10 @@ module.exports.fetchRefundStatusFromPhonepe = async (merchantRefundId) => {
 
     return response
 }
+
+
+// The following are services to fetch serviceable pincodes and Shipping charges from db (Use Delhivery APIs instead);
+
+module.exports.getStaticPincodeServicibility = async ()=>{
+    const response = await Charge
+}

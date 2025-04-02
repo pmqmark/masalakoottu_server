@@ -19,6 +19,7 @@ const { testimonialRouter } = require("./routes/testimonial.route");
 const { webHookRouter } = require("./routes/webhook.route");
 const { startRefreshPgTokenJob } = require("./crons/refreshPgToken.cron");
 const { chargeRouter } = require("./routes/charge.route");
+const { zoneRouter } = require("./routes/zone.route");
 
 const PORT = process.env.PORT || 8080
 const ClientURL = process.env.ClientURL;
@@ -65,6 +66,7 @@ app.use('/api/dashboard', dashboardRouter)
 app.use('/api/banners', bannerRouter)
 app.use('/api/testimonials', testimonialRouter)
 app.use('/api/charges', chargeRouter)
+app.use('/api/zones', zoneRouter)
 
 app.use("*", (req, res) => res.status(404).json({
   success: false,

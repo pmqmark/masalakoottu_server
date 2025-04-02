@@ -4,8 +4,7 @@ const { chargeKindList, chargeBasisList } = require("../config/data");
 const chargeSchema = new Schema({
     kind: { type: String, required: true, enum: chargeKindList },
     basis: { type: String, required: true, enum: chargeBasisList },
-    zone: { type: String },
-    pincodes: [{ type: String }],
+    zone: { type: Schema.Types.ObjectId, ref: 'Zone' },
     criteria: [
         {
             type: {

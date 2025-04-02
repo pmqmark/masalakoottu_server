@@ -6,10 +6,12 @@ module.exports.createCharge = async (obj) => {
 
 module.exports.getChargeById = async (id) => {
     return await Charge.findById(id)
+    .populate('zone')
 }
 
 module.exports.getManyCharges = async (filters) => {
     return await Charge.find(filters)
+    .populate('zone')
 }
 
 module.exports.updateCharge = async (id, obj) => {
