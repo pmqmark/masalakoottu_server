@@ -12,7 +12,7 @@ const { addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = requ
 const moment = require("moment");
 const { getPincodeServicibility, calculateShippingCost } = require("../services/logistics.service");
 
-const lp_api_active = process.env.lp_api_active;
+const lp_api_status = process.env.lp_api_status;
 const originPin = 'Origin pin of seller'
 
 module.exports.checkoutCtrl = async (req, res) => {
@@ -36,7 +36,7 @@ module.exports.checkoutCtrl = async (req, res) => {
 
             try {
 
-                if (lp_api_active) {
+                if (lp_api_status === "active") {
                     pincodeServicibility = await getPincodeServicibility(pincode)
                 } else {
                     pincodeServicibility = await getStaticPincodeServicibility(pincode)
@@ -115,7 +115,7 @@ module.exports.checkoutCtrl = async (req, res) => {
         let shippingCost = 0;
 
         try {
-            if (lp_api_active) {
+            if (lp_api_status === "active") {
                 const params = {
                     md: deliveryType === 'Express' ? 'E' : 'S',
                     cgm: weight,
@@ -639,9 +639,10 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
 
         // https://one.delhivery.com/developer-portal/document/b2c/detail/calculate-shipping-cost
 
-        const { weight = 0, pincode,
-            buyMode = "later", deliveryType = "Standard",
+        const { buyMode = "later", deliveryType = "Standard",
             productId, quantity, variations } = req.body
+
+        let { weight = 0, pincode } = req.body
 
         let billMode = deliveryType === 'Express' ? 'E' : 'S'
         let shipStatus = "Delivered"
@@ -684,7 +685,7 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
             pincode = address?.pincode
 
             try {
-                if (lp_api_active) {
+                if (lp_api_status === "active") {
                     pincodeServicibility = await getPincodeServicibility(pincode)
 
                 } else {
@@ -707,7 +708,7 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
         let shippingCost = 0;
         if (pincodeServicibility) {
             try {
-                if (lp_api_active) {
+                if (lp_api_status === "active") {
                     const params = {
                         md: billMode,
                         cgm: weight,
@@ -740,12 +741,12 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
             })
         }
 
-        const subtotal = cart.reduce((total, item) => {
+        const subtotal = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
             return total + ((item.price + extraCharges) * item.quantity);
         }, 0);
 
-        const totalTax = cart.reduce((total, item) => {
+        const totalTax = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
             return total + (((item.price + extraCharges) * item.quantity) * (item.tax / 100));
         }, 0);
@@ -753,7 +754,7 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: 'success',
-            data: { cart, subtotal, totalTax, pincodeServicibility, shippingCost },
+            data: { cart: items, subtotal, totalTax, pincodeServicibility, shippingCost },
             error: null
         });
     } catch (error) {
