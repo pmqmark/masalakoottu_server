@@ -22,14 +22,9 @@ const chargeValidator = {
       .isIn(chargeBasisList)
       .withMessage(`basis must be one of: ${chargeBasisList.join(", ")}`),
 
-    body("zone")
-      .optional()
-      .isMongoId()
-      .withMessage("zone must be a valid id"),
-
     body("criteria")
-      .isArray({ min: 1 })
-      .withMessage("criteria must be an array with at least one entry"),
+      .isArray()
+      .withMessage("criteria must be an array"),
 
     body("criteria.*.value")
       .optional()
@@ -71,15 +66,11 @@ const chargeValidator = {
       .isIn(chargeBasisList)
       .withMessage(`basis must be one of: ${chargeBasisList.join(", ")}`),
 
-    body("zone")
-      .optional()
-      .isMongoId()
-      .withMessage("zone must be a valid id"),
 
     body("criteria")
       .optional()
-      .isArray({ min: 1 })
-      .withMessage("criteria must be an array with at least one entry"),
+      .isArray()
+      .withMessage("criteria must be an array"),
 
     body("criteria.*.value")
       .optional()
