@@ -2,7 +2,7 @@ const cron = require("node-cron");
 const { fetchPhonePeTokenFromAPI } = require("../services/pg.service");
 
 const startRefreshPgTokenJob = () => {
-    cron.schedule("*/50 * * * *", async () => {
+    cron.schedule("*/45 * * * *", async () => {
         try {
             await fetchPhonePeTokenFromAPI();
         } catch (error) {

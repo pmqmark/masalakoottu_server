@@ -62,7 +62,7 @@ async function getPhonePeToken() {
             await fetchPhonePeTokenFromAPI();
 
             token = await redis.get("phonepe_access_token");
-            console.log("Stored Token:", token);
+            console.log("Newly Stored Token:", token);
 
         } catch (error) {
             console.error("Failed to fetch PhonePe token:", error.message);
