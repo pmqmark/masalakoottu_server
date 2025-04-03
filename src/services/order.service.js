@@ -160,5 +160,9 @@ module.exports.calculateStaticShipCostByWt = async (pincode, weight) => {
         throw new Error('Invalid Item')
     }
 
+    if (isNaN(item?.price)) {
+        throw new Error('Invalid Price')
+    }
+
     return item?.price;
 }

@@ -7,16 +7,18 @@ const { saveOrder, onlinePayment, updateOrder, findManyOrders, getOrderById,
     getStaticPincodeServicibility,
     calculateStaticShipCostByWt } = require("../services/order.service");
 const { decrementProductQty, getBuyNowItem, stockChecker } = require("../services/product.service");
-const { getCart, getUserById, fetchOneAddress } = require("../services/user.service");
+const { getCart, getUserById, fetchOneAddress, fetchSingleAddress } = require("../services/user.service");
 const { addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
 const moment = require("moment");
 const { getPincodeServicibility, calculateShippingCost } = require("../services/logistics.service");
 
+const lp_api_active = process.env.lp_api_active;
+const originPin = 'Origin pin of seller'
 
 module.exports.checkoutCtrl = async (req, res) => {
     try {
         const {
-            billAddress, shipAddress, payMode, deliveryType, deliveryCharge = 0,
+            billAddress, shipAddress, payMode, deliveryType,
             couponCode, buyMode, productId, quantity, variations
         } = req.body;
 
@@ -26,12 +28,44 @@ module.exports.checkoutCtrl = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found', error: 'NOT_FOUND' });
         }
 
+        let pincode, pincodeServicibility;
+        const address = await fetchSingleAddress(shipAddress)
+
+        if (address?.pincode) {
+            pincode = address?.pincode
+
+            try {
+
+                if (lp_api_active) {
+                    pincodeServicibility = await getPincodeServicibility(pincode)
+                } else {
+                    pincodeServicibility = await getStaticPincodeServicibility(pincode)
+                }
+
+                if (!pincodeServicibility) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Service not available in this pincode",
+                        data: null,
+                        error: 'NO_SERVICE'
+                    })
+                }
+            } catch (error) {
+                console.log(error)
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Service not available in this pincode",
+                    data: null,
+                    error: 'NO_SERVICE'
+                })
+            }
+        }
+
         let items = [];
 
         if (buyMode === "later") {
             items = await getCart(userId);
-
-
         } else if (buyMode === "now") {
             if (!isValidObjectId(productId) || quantity <= 0) {
                 return res.status(400).json({ success: false, message: 'Invalid Product Id or Quantity', error: 'BAD_REQUEST' });
@@ -76,6 +110,38 @@ module.exports.checkoutCtrl = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Empty Cart', error: 'BAD_REQUEST' });
         }
 
+        let weight = items.reduce((acc, value) => acc + (value?.weight ?? 0), 0)
+
+        let shippingCost = 0;
+
+        try {
+            if (lp_api_active) {
+                const params = {
+                    md: deliveryType === 'Express' ? 'E' : 'S',
+                    cgm: weight,
+                    o_pin: originPin,
+                    d_pin: pincode,
+                    ss: "Delivered",
+                }
+
+                shippingCost = await calculateShippingCost(params)
+
+            } else {
+                shippingCost = await calculateStaticShipCostByWt(pincode, weight)
+
+            }
+
+        } catch (error) {
+            console.log(error)
+            return res.status(400).json({
+                success: false,
+                message: error?.message ?? "Failed to get Shipping Cost",
+                data: null,
+                error: 'Invalid Shipping Cost'
+            })
+        }
+
+
         let subTotal = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
             return total + ((item.price + extraCharges) * item.quantity);
@@ -105,7 +171,7 @@ module.exports.checkoutCtrl = async (req, res) => {
 
         }
 
-        const orderAmount = subTotal + totalTax + Math.max(0, deliveryCharge) - discountAmount;
+        const orderAmount = subTotal + totalTax + shippingCost - discountAmount;
 
         const prefix = 'ORDID';
         const value = moment().add(10, 'seconds').unix();
@@ -117,7 +183,7 @@ module.exports.checkoutCtrl = async (req, res) => {
             couponCode,
             totalTax,
             discount: discountAmount,
-            deliveryCharge: Math.max(0, deliveryCharge),
+            deliveryCharge: shippingCost,
             subTotal,
             amount: orderAmount,
             items,
@@ -570,17 +636,33 @@ module.exports.getRefundStatusCtrl = async (req, res) => {
 module.exports.fetchCheckoutDataCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
-        const originPin = 'Origin pin of seller'
 
         // https://one.delhivery.com/developer-portal/document/b2c/detail/calculate-shipping-cost
 
-        let { billMode, weight = 0, pincode, shipStatus } = req.body
+        const { weight = 0, pincode,
+            buyMode = "later", deliveryType = "Standard",
+            productId, quantity, variations } = req.body
 
-        const cart = await getCart(userId)
+        let billMode = deliveryType === 'Express' ? 'E' : 'S'
+        let shipStatus = "Delivered"
+        let items = [];
 
-        console.log({ cart })
+        if (buyMode === "later") {
+            items = await getCart(userId);
+        } else if (buyMode === "now") {
+            if (!isValidObjectId(productId) || quantity <= 0) {
+                return res.status(400).json({ success: false, message: 'Invalid Product Id or Quantity', error: 'BAD_REQUEST' });
+            }
+            const buyNowItem = await getBuyNowItem(productId, quantity, variations);
+            if (!buyNowItem) {
+                return res.status(400).json({ success: false, message: 'Unable to fetch item', error: 'BAD_REQUEST' });
+            }
+            items = [buyNowItem];
+        } else {
+            return res.status(400).json({ success: false, message: 'Invalid Buy Mode', error: 'BAD_REQUEST' });
+        }
 
-        const cartWeight = cart.reduce((acc, value) => acc + (value?.weight ?? 0), 0)
+        const cartWeight = items.reduce((acc, value) => acc + (value?.weight ?? 0), 0)
 
         if (cartWeight > weight) {
             weight = cartWeight
@@ -602,9 +684,14 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
             pincode = address?.pincode
 
             try {
-                // pincodeServicibility = await getPincodeServicibility(pincode)
+                if (lp_api_active) {
+                    pincodeServicibility = await getPincodeServicibility(pincode)
 
-                pincodeServicibility = await getStaticPincodeServicibility(pincode)
+                } else {
+                    pincodeServicibility = await getStaticPincodeServicibility(pincode)
+
+                }
+
             } catch (error) {
                 console.log(error)
 
@@ -619,18 +706,21 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
 
         let shippingCost = 0;
         if (pincodeServicibility) {
-            const params = {
-                md: billMode,
-                cgm: weight,
-                o_pin: originPin,
-                d_pin: pincode,
-                ss: shipStatus,
-            }
-
             try {
-                // shippingCost = await calculateShippingCost(params)
+                if (lp_api_active) {
+                    const params = {
+                        md: billMode,
+                        cgm: weight,
+                        o_pin: originPin,
+                        d_pin: pincode,
+                        ss: shipStatus,
+                    }
 
-                shippingCost = await calculateStaticShipCostByWt(pincode, weight)
+                    shippingCost = await calculateShippingCost(params)
+                } else {
+                    shippingCost = await calculateStaticShipCostByWt(pincode, weight)
+                }
+
             } catch (error) {
                 console.log(error)
                 return res.status(400).json({
