@@ -21,7 +21,7 @@ module.exports.onlinePayment = async (merchantOrderId, user, amount) => {
 
     const payload = {
         "merchantOrderId": `${merchantOrderId}`,
-        "amount": amount * 100,
+        "amount": (amount * 100).toFixed(2),
         "expireAfter": 1200,
         "metaInfo": {
             "name": `${user?.firstName} ${user?.lastName}`,
@@ -129,8 +129,8 @@ module.exports.fetchRefundStatusFromPhonepe = async (merchantRefundId) => {
 // The following are services to fetch serviceable pincodes and Shipping charges from db (Use Delhivery APIs instead);
 
 module.exports.getStaticPincodeServicibility = async (pincode) => {
-    console.log({pincode})
-    
+    console.log({ pincode })
+
     const zone = await Zone.findOne({ pincodes: { $in: [pincode] } })
 
     if (zone) {
@@ -142,27 +142,20 @@ module.exports.getStaticPincodeServicibility = async (pincode) => {
 }
 
 module.exports.calculateStaticShipCostByWt = async (pincode, weight) => {
-    const zone = await Zone.findOne({ pincodes: { $in: [pincode] } })
+    console.log({weight})
+    const zone = await Zone.findOne({ pincodes: { $in: [pincode] } }) || await Zone.findOne({ name: 'default' });
 
-    if (!zone) {
-        throw new Error('Invalid Zone')
-    }
+    if (!zone) throw new Error('Zone not found');
 
-    const charge = await Charge.findOne({ kind: "shipping", basis: "weight", zone: zone?._id })
+    const charge = await Charge.findOne({ kind: "shipping", basis: "weight", zone: zone?._id });
 
-    if (!charge) {
-        throw new Error('Invalid Charge')
-    }
+    if (!charge || !Array.isArray(charge.criteria)) throw new Error('Invalid Charge');
 
-    const item = charge?.criteria?.find(item => item?.value === weight)
+    const sortedList = charge.criteria.sort((a, b) => a.value - b.value);
 
-    if (!item) {
-        throw new Error('Invalid Item')
-    }
+    const item = sortedList.find(item => item?.value >= weight);
 
-    if (isNaN(item?.price)) {
-        throw new Error('Invalid Price')
-    }
+    if (!item || isNaN(item.price)) throw new Error('Invalid Shipping Price');
 
-    return item?.price;
+    return item.price;
 }

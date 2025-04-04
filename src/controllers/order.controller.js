@@ -42,14 +42,6 @@ module.exports.checkoutCtrl = async (req, res) => {
                     pincodeServicibility = await getStaticPincodeServicibility(pincode)
                 }
 
-                if (!pincodeServicibility) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Service not available in this pincode",
-                        data: null,
-                        error: 'NO_SERVICE'
-                    })
-                }
             } catch (error) {
                 console.log(error)
 
@@ -110,12 +102,12 @@ module.exports.checkoutCtrl = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Empty Cart', error: 'BAD_REQUEST' });
         }
 
-        let weight = items.reduce((acc, value) => acc + (value?.weight ?? 0), 0)
+        let weight = items.reduce((acc, item) => acc + ((item?.weight ?? 0) * item?.quantity), 0)
 
         let shippingCost = 0;
 
         try {
-            if (lp_api_status === "active") {
+            if (lp_api_status === "active" && pincodeServicibility) {
                 const params = {
                     md: deliveryType === 'Express' ? 'E' : 'S',
                     cgm: weight,
@@ -142,7 +134,7 @@ module.exports.checkoutCtrl = async (req, res) => {
         }
 
 
-        let subTotal = items.reduce((total, item) => {
+        const subTotal = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
             return total + ((item.price + extraCharges) * item.quantity);
         }, 0);
@@ -171,7 +163,7 @@ module.exports.checkoutCtrl = async (req, res) => {
 
         }
 
-        const orderAmount = subTotal + totalTax + shippingCost - discountAmount;
+        const orderAmount = (subTotal + totalTax + shippingCost - discountAmount).toFixed(2);
 
         const prefix = 'ORDID';
         const value = moment().add(10, 'seconds').unix();
@@ -663,7 +655,7 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid Buy Mode', error: 'BAD_REQUEST' });
         }
 
-        const cartWeight = items.reduce((acc, value) => acc + (value?.weight ?? 0), 0)
+        const cartWeight = items.reduce((acc, item) => acc + ((item?.weight ?? 0) * item?.quantity), 0)
 
         if (cartWeight > weight) {
             weight = cartWeight
@@ -733,12 +725,7 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
             }
         }
         else {
-            return res.status(400).json({
-                success: false,
-                message: "Service not available in this pincode",
-                data: null,
-                error: 'NO_SERVICE'
-            })
+            shippingCost = await calculateStaticShipCostByWt(pincode, weight)
         }
 
         const subtotal = items.reduce((total, item) => {
