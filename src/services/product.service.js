@@ -239,29 +239,55 @@ module.exports.bulkInsertProducts = async (file) => {
 
     const stream = Readable.from(file.buffer);
 
-    stream.pipe(csv())
-        .on('data', (row) => {
-            results.push({
-                name: row.name,
-                price: parseFloat(row.price),
-                hsn: row.hsn,
-                tax: row.tax,
-                brand: row.brand,
-                batches: [{ quantity: 100 }]
+    return new Promise((resolve, reject) => {
+        stream
+            .pipe(csv())
+            .on('data', (row) => {
+                results.push({
+                    name: row.name,
+                    price: parseFloat(row.rate),
+                    hsn: row.hsn,
+                    tax: row.tax,
+                    brand: row.brand,
+                    batches: [{ quantity: parseInt(row.stock) }],
+                    weight: parseFloat(row.weight) * 1000
+                });
+            })
+            .on('end', async () => {
+                try {
+                    console.log({results})
+                    
+                    for (const product of results) {
+                        await Product.updateOne(
+                            { name: product.name }, 
+                            {
+                                $set: {
+                                    price: product.price,
+                                    hsn: product.hsn,
+                                    tax: product.tax,
+                                    brand: product.brand,
+                                    weight: product.weight,
+                                },
+                                $push: {
+                                    batches: { $each: product.batches }
+                                }
+                            },
+                            { upsert: true } 
+                        );
+                    }
+
+                    console.log({ message: `${results.length} products processed (updated or inserted).` });
+                    resolve({ message: `${results.length} products processed.` });
+                } catch (err) {
+                    console.error('Bulk upsert error:', err);
+                    reject(new Error('Bulk update failed.'));
+                }
+            })
+            .on('error', (err) => {
+                console.error('CSV parsing error:', err);
+                reject(new Error('CSV parsing failed.'));
             });
-        })
-        .on('end', async () => {
-
-            console.log({ results })
-
-            await Product.insertMany(results);
-
-            console.log({ message: `${results.length} products inserted successfully.` })
-        })
-        .on('error', (err) => {
-            console.error('CSV parsing error:', err);
-            throw new Error('CSV parsing failed.')
-        });
+    });
 }
 
 
