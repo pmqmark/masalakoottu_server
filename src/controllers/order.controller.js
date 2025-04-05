@@ -163,7 +163,7 @@ module.exports.checkoutCtrl = async (req, res) => {
 
         }
 
-        const orderAmount = (subTotal + totalTax + shippingCost - discountAmount).toFixed(2);
+        const orderAmount = subTotal + totalTax + shippingCost - discountAmount;
 
         const prefix = 'ORDID';
         const value = moment().add(10, 'seconds').unix();

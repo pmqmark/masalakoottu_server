@@ -21,7 +21,7 @@ module.exports.onlinePayment = async (merchantOrderId, user, amount) => {
 
     const payload = {
         "merchantOrderId": `${merchantOrderId}`,
-        "amount": (amount * 100).toFixed(2),
+        "amount": amount * 100,
         "expireAfter": 1200,
         "metaInfo": {
             "name": `${user?.firstName} ${user?.lastName}`,
