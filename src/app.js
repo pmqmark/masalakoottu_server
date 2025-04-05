@@ -17,7 +17,6 @@ const { dashboardRouter } = require("./routes/dashboard.route");
 const { bannerRouter } = require("./routes/banner.route");
 const { testimonialRouter } = require("./routes/testimonial.route");
 const { webHookRouter } = require("./routes/webhook.route");
-const { startRefreshPgTokenJob } = require("./crons/refreshPgToken.cron");
 const { chargeRouter } = require("./routes/charge.route");
 const { zoneRouter } = require("./routes/zone.route");
 
@@ -74,8 +73,6 @@ app.use("*", (req, res) => res.status(404).json({
   data: null,
   error: 'NOT_FOUND'
 }))
-
-startRefreshPgTokenJob()
 
 app.listen(PORT, () => {
   console.log("Server Running on port :", PORT)

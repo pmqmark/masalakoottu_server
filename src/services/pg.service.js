@@ -15,7 +15,11 @@ const base_url = isProduction ? process.env.prod_base_url : process.env.uat_base
 async function savePhonePeToken(tokenData) {
     const { access_token, expires_in = 3600 } = tokenData;
 
-    console.log({ spt: access_token })
+    if (!access_token || typeof access_token !== 'string') {
+        throw new Error("Invalid access_token received from PhonePe API");
+    }
+
+    console.log("Token to Save:", access_token);
 
     await redis.set(
         "phonepe_access_token",
@@ -43,7 +47,7 @@ async function fetchPhonePeTokenFromAPI() {
 
     const tokenData = response.data;
 
-    console.log({ tokenData })
+    console.log("API Response:", tokenData);
 
     await savePhonePeToken(tokenData);
     console.log("PhonePe token refreshed and stores in redis");
@@ -52,13 +56,16 @@ async function fetchPhonePeTokenFromAPI() {
 
 async function getPhonePeToken() {
     let token = await redis.get("phonepe_access_token");
-    console.log("Stored Token:", token);
+    console.log("Token from Redis:", token);
+
+    const ttl = await redis.ttl("phonepe_access_token");
+    console.log("TTL left:", ttl);
 
     if (!token) {
         console.warn("PhonePe token is missing in redis. Fething a fresh token");
 
         try {
-          
+
             await fetchPhonePeTokenFromAPI();
 
             token = await redis.get("phonepe_access_token");
@@ -89,4 +96,4 @@ phonePeApi.interceptors.request.use(async (config) => {
     return config;
 })
 
-module.exports = { phonePeApi , fetchPhonePeTokenFromAPI}
+module.exports = { phonePeApi, fetchPhonePeTokenFromAPI }
