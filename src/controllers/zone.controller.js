@@ -131,6 +131,15 @@ module.exports.updateZoneCtrl = async (req, res) => {
             })
         }
 
+        if (zone?.name === "default") {
+            return res.status(400).json({
+                success: false,
+                message: 'Default zone cannot be updated',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
         const updateObj = req.body;
 
         const updatedZone = await updateZone(id, updateObj)
