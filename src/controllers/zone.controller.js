@@ -179,9 +179,29 @@ module.exports.deleteZoneCtrl = async (req, res) => {
             })
         }
 
-        const zone = await deleteZone(id)
+        const zone = await getZoneById(id)
 
         if (!zone) {
+            return res.status(400).json({
+                success: false,
+                message: 'Not Found',
+                data: null,
+                error: 'NOT_FOUND'
+            })
+        }
+
+        if (zone?.name === "default") {
+            return res.status(400).json({
+                success: false,
+                message: 'Default zone cannot be removed',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        const deletedZone = await deleteZone(id)
+
+        if (!deletedZone) {
             throw new Error('FAILED')
         }
 
