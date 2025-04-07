@@ -234,20 +234,20 @@ module.exports.getManyProductsCtrl = async (req, res, next) => {
             filters.tags = { $in: [tag] }
         }
 
-        const catFilters = {}
         if (isValidObjectId(category)) {
+            const catFilters = {}
             catFilters.$or = [{ parent: category }, { _id: category }]
-        }
+            const cats = await getManyCategories(catFilters)
 
-        const cats = await getManyCategories(catFilters)
+            const productIds = cats?.flatMap((cat) => cat?.productIds) ?? []
 
-        const productIds = cats?.flatMap((cat) => cat?.productIds) ?? []
-
-        if (productIds?.length > 0) {
             filters._id = { $in: productIds }
         }
 
+
         let result = await getManyProducts(filters)
+
+        const total = result?.length;
 
         if (page && entries) {
             result = result.slice((page - 1) * entries, page * entries)
@@ -261,7 +261,7 @@ module.exports.getManyProductsCtrl = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: 'success',
-            data: { result },
+            data: { result, pagination: { total } },
             error: null
         })
 
@@ -282,7 +282,7 @@ module.exports.getAllProductsCtrl = async (req, res, next) => {
         let { page, entries } = req.query;
         page = parseInt(page);
         entries = parseInt(entries)
-        const { tag, search } = req.query;
+        const { tag, search, category } = req.query;
 
         const filters = {};
 
@@ -298,23 +298,37 @@ module.exports.getAllProductsCtrl = async (req, res, next) => {
             filters.tags = { $in: [tag] }
         }
 
+        if (isValidObjectId(category)) {
+            const catFilters = {}
+            catFilters.$or = [{ parent: category }, { _id: category }]
+            const cats = await getManyCategories(catFilters)
+
+            const productIds = cats?.flatMap((cat) => cat?.productIds) ?? []
+
+            filters._id = { $in: productIds }
+        }
+
+
         let result = await getManyProducts(filters)
+
+        const total = result?.length;
 
         if (page && entries) {
             result = result.slice((page - 1) * entries, page * entries)
         }
-        
+
         result = result?.map((product) => ({
             ...product,
             stock: product?.batches?.reduce((sum, batch) => sum + batch?.quantity, 0) ?? 0,
         }))
-        
+
         return res.status(200).json({
             success: true,
             message: 'success',
-            data: { result },
+            data: { result, pagination: { total } },
             error: null
         })
+
 
     } catch (error) {
         console.error(error)
