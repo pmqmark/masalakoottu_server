@@ -16,8 +16,7 @@ const orderValidator = {
         body("expectedDelivery")
             .optional()
             .isISO8601()
-            .withMessage("expectedDelivery must be a valid date"),
-
+            .withMessage("expected Delivery must be a valid date"),
 
         body("discount")
             .optional()
@@ -27,17 +26,22 @@ const orderValidator = {
         body("deliveryType")
             .optional()
             .isIn(deliveryTypeList)
-            .withMessage(`deliveryType must be one of: ${deliveryTypeList.join(", ")}`),
+            .withMessage(`delivery Type must be one of: ${deliveryTypeList.join(", ")}`),
 
         body("deliveryCharge")
             .optional()
             .isNumeric()
-            .withMessage("deliveryCharge must be a number"),
+            .withMessage("delivery Charge must be a number"),
 
         body("couponCode")
             .optional()
             .isString()
-            .withMessage("couponCode must be a string"),
+            .withMessage("coupon Code must be a string"),
+
+        body("shipAddress")
+            .custom(isValidObjectId)
+            .withMessage("Invalid Shipping Address"),
+
     ],
 
     update: [
