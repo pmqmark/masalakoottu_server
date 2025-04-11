@@ -4,6 +4,8 @@ const { orderStatusList } = require("../config/data");
 const { phonePeApi } = require("../services/pg.service");
 const { Zone } = require("../models/zone.model");
 const { Charge } = require("../models/charge.model");
+const { validateEmail } = require("../utils/validate.util");
+const { sendEmail } = require("../utils/mailer.util");
 
 const ClientURL = process.env.ClientURL;
 
@@ -142,7 +144,7 @@ module.exports.getStaticPincodeServicibility = async (pincode) => {
 }
 
 module.exports.calculateStaticShipCostByWt = async (pincode, weight) => {
-    console.log({weight})
+    console.log({ weight })
     const zone = await Zone.findOne({ pincodes: { $in: [pincode] } }) || await Zone.findOne({ name: 'default' });
 
     if (!zone) throw new Error('Zone not found');
@@ -159,3 +161,37 @@ module.exports.calculateStaticShipCostByWt = async (pincode, weight) => {
 
     return item.price;
 }
+
+module.exports.sendConfirmationMail = async (orderInfo) => {
+    const { user, order } = orderInfo;
+
+    if (validateEmail(user?.email)) {
+        const mailObj = {
+            from: `"Masalakoott" <${process.env.MAIL_USER}>`,
+            to: user?.email,
+            subject: "Your Order Has Been Successfully Placed",
+            html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <h2 style="color: #2e6c80;">Thank you for shopping with us!</h2>
+                <p>Dear Customer,</p>
+                <p>
+                    ${order?.items?.length > 0
+                    ? `Your order for ${order.items[0]?.name}${order.items.length > 1 ? " + more" : ""} has been successfully placed.`
+                    : "Your order has been successfully placed."
+                }
+                </p>
+                ${order?.totalTax ? `<p>Total Tax: ₹${order.totalTax}</p>` : ``}
+                ${order?.discount ? `<p>Discount: ₹${order.discount}</p>` : ``}
+                ${order?.deliveryCharge ? `<p>Delivery Charge: ₹${order.deliveryCharge}</p>` : ``}
+                ${order?.amount ? `<p>Amount Paid: ₹${order.amount}</p>` : ``}
+                <p>We hope you enjoy your purchase.</p>
+                <br/>
+                <p>Warm regards,</p>
+                <p><strong>Masalakoott</strong></p>
+            </div>
+            `
+        };
+
+        return await sendEmail(mailObj);
+    }
+};

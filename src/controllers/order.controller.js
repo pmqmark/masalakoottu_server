@@ -5,12 +5,15 @@ const { saveOrder, onlinePayment, updateOrder, findManyOrders, getOrderById,
     sendRefundRequestToPhonepe,
     fetchRefundStatusFromPhonepe,
     getStaticPincodeServicibility,
-    calculateStaticShipCostByWt } = require("../services/order.service");
+    calculateStaticShipCostByWt,
+    sendConfirmationMail } = require("../services/order.service");
 const { decrementProductQty, getBuyNowItem, stockChecker } = require("../services/product.service");
 const { getCart, getUserById, fetchOneAddress, fetchSingleAddress } = require("../services/user.service");
 const { addUserIdToCoupon, applyAutomaticDiscounts, applyCouponDiscount } = require("../services/discount.service");
 const moment = require("moment");
 const { getPincodeServicibility, calculateShippingCost } = require("../services/logistics.service");
+const { validateEmail } = require("../utils/validate.util");
+const { sendEmail } = require("../utils/mailer.util");
 
 const lp_api_status = process.env.lp_api_status;
 const originPin = 'Origin pin of seller'
@@ -206,6 +209,19 @@ module.exports.checkoutCtrl = async (req, res) => {
         const paymentResponse = await onlinePayment(merchantOrderId, user, orderAmount);
         if (paymentResponse?.status !== 200) {
             return res.status(500).json({ success: false, message: 'Failed to initiate payment', error: 'FAILED_PAYMENT_INITIATION' });
+        }
+
+
+        // Sent Confirmation Email
+        try {
+            const orderInfo = {
+                user, order
+            }
+
+            const info = await sendConfirmationMail(orderInfo)
+            console.log({ info })
+        } catch (error) {
+            console.log(error)
         }
 
         return res.status(200).json({
