@@ -54,12 +54,12 @@ const orderValidator = {
         body("transactionId")
             .optional()
             .isString()
-            .withMessage("transactionId must be a string"),
+            .withMessage("transaction Id must be a string"),
 
         body("payStatus")
             .optional()
             .isIn(payStatusList)
-            .withMessage(`payStatus must be one of: ${payStatusList.join(", ")}`),
+            .withMessage(`pay Status must be one of: ${payStatusList.join(", ")}`),
 
         body("status")
             .optional()
@@ -74,12 +74,12 @@ const orderValidator = {
         body("orderDate")
             .optional()
             .isISO8601()
-            .withMessage("orderDate must be a valid date"),
+            .withMessage("order Date must be a valid date"),
 
         body("expectedDelivery")
             .optional()
             .isISO8601()
-            .withMessage("expectedDelivery must be a valid date"),
+            .withMessage("expected Delivery must be a valid date"),
 
         body("items")
             .optional()
@@ -109,12 +109,12 @@ const orderValidator = {
         body("billAddress")
             .optional()
             .custom(isValidObjectId)
-            .withMessage("billAddress must be a valid ObjectId"),
+            .withMessage("bill Address must be a valid ObjectId"),
 
         body("shipAddress")
             .optional()
             .custom(isValidObjectId)
-            .withMessage("shipAddress must be a valid ObjectId"),
+            .withMessage("ship Address must be a valid ObjectId"),
 
         body("discount")
             .optional()
@@ -124,19 +124,29 @@ const orderValidator = {
         body("deliveryType")
             .optional()
             .isIn(deliveryTypeList)
-            .withMessage(`deliveryType must be one of: ${deliveryTypeList.join(", ")}`),
+            .withMessage(`delivery Type must be one of: ${deliveryTypeList.join(", ")}`),
 
         body("deliveryCharge")
             .optional()
             .isNumeric()
-            .withMessage("deliveryCharge must be a number"),
+            .withMessage("delivery Charge must be a number"),
 
         body("couponId")
             .optional()
             .custom(isValidObjectId)
             .withMessage("couponId must be a valid ObjectId"),
-    ]
 
+        body("waybill")
+            .optional()
+            .isString()
+            .withMessage("waybill must be a string"),
+
+        body("deliveryPartner")
+            .optional()
+            .isString()
+            .withMessage("delivery Partner must be a string"),
+
+    ]
 }
 
 module.exports = { orderValidator }
