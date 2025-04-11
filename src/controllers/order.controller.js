@@ -97,7 +97,6 @@ module.exports.checkoutCtrl = async (req, res) => {
             if (item.stockStatus === 'INSUFFICIENT') {
                 item.quantity = Math.max(item.stock, 1);
             }
-
             return item
         })
 
@@ -118,14 +117,11 @@ module.exports.checkoutCtrl = async (req, res) => {
                     d_pin: pincode,
                     ss: "Delivered",
                 }
-
                 shippingCost = await calculateShippingCost(params)
 
             } else {
                 shippingCost = await calculateStaticShipCostByWt(pincode, weight)
-
             }
-
         } catch (error) {
             console.log(error)
             return res.status(400).json({
@@ -136,7 +132,6 @@ module.exports.checkoutCtrl = async (req, res) => {
             })
         }
 
-
         const subTotal = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
             return total + ((item.price + extraCharges) * item.quantity);
@@ -144,9 +139,10 @@ module.exports.checkoutCtrl = async (req, res) => {
 
         const totalTax = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
-            return total + (((item.price + extraCharges) * item.quantity) * (item.tax / 100));
+            const itemBasePrice = item.price + extraCharges;
+            const taxPortionPerUnit = item.tax ? itemBasePrice * (item.tax / (100 + item.tax)) : 0;
+            return total + (taxPortionPerUnit * item.quantity);
         }, 0);
-
 
         let discountAmount = 0;
         const { autoDiscountAmt, autoDiscountMsg } = await applyAutomaticDiscounts(items)
@@ -163,10 +159,10 @@ module.exports.checkoutCtrl = async (req, res) => {
             if (typeof couponDiscountAmt === "number" && couponDiscountAmt > 0) {
                 discountAmount += couponDiscountAmt
             }
-
         }
 
-        const orderAmount = subTotal + totalTax + shippingCost - discountAmount;
+        // *** Important ***
+        const orderAmount = subTotal + shippingCost - discountAmount;
 
         const prefix = 'ORDID';
         const value = moment().add(10, 'seconds').unix();
@@ -195,14 +191,11 @@ module.exports.checkoutCtrl = async (req, res) => {
         }
 
         if (payMode === 'COD') {
-
             if (couponCode) {
                 await addUserIdToCoupon(couponCode, userId);
             }
-
             await decrementProductQty(items);
             if (buyMode === "later") await clearCart(userId);
-
             return res.status(201).json({ success: true, message: "Order placed successfully", data: { order } });
         }
 
@@ -211,13 +204,11 @@ module.exports.checkoutCtrl = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Failed to initiate payment', error: 'FAILED_PAYMENT_INITIATION' });
         }
 
-
         // Sent Confirmation Email
         try {
             const orderInfo = {
                 user, order
             }
-
             const info = await sendConfirmationMail(orderInfo)
             console.log({ info })
         } catch (error) {
@@ -229,7 +220,6 @@ module.exports.checkoutCtrl = async (req, res) => {
             message: "Order placed successfully",
             data: { redirectUrl: paymentResponse?.data?.redirectUrl }
         });
-
     } catch (error) {
         console.error(error);
         return res.status(500).json({
@@ -751,7 +741,9 @@ module.exports.fetchCheckoutDataCtrl = async (req, res) => {
 
         const totalTax = items.reduce((total, item) => {
             const extraCharges = item.variations?.reduce((acc, elem) => acc + elem?.additionalPrice, 0) || 0;
-            return total + (((item.price + extraCharges) * item.quantity) * (item.tax / 100));
+            const itemBasePrice = item.price + extraCharges;
+            const taxPortionPerUnit = item.tax ? itemBasePrice * (item.tax / (100 + item.tax)) : 0;
+            return total + (taxPortionPerUnit * item.quantity);
         }, 0);
 
         return res.status(200).json({
