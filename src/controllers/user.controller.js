@@ -10,7 +10,7 @@ const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
 const { genderList, roleList } = require("../config/data");
-const { checkIfVariationExists } = require("../services/product.service");
+const { checkIfVariationExists, getProductById } = require("../services/product.service");
 const { findManyOrders } = require("../services/order.service");
 
 // Accessible to Public
@@ -500,6 +500,17 @@ module.exports.setCartCtrl = async (req, res) => {
                 return res.status(400).json({
                     success: false,
                     message: 'Invalid product ID in cart item',
+                    data: null,
+                    error: 'BAD_REQUEST'
+                });
+            }
+
+            const product = await getProductById(productId)
+
+            if (!product) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Product not found: ${productId}`,
                     data: null,
                     error: 'BAD_REQUEST'
                 });
