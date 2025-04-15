@@ -279,3 +279,59 @@ module.exports.deleteReviewCtrl = async (req, res) => {
         })
     }
 }
+
+
+module.exports.updateReviewStatusCtrl = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Id',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        const { status } = req.body;
+        if (!['archived', 'unarchived']?.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Id',
+                data: null,
+                error: 'BAD_REQUEST'
+            })
+        }
+
+        let isArchived;
+        if (status === 'archived') {
+            isArchived = true;
+        }
+        else {
+            isArchived = false;
+        }
+
+        const review = await updateReview(id, isArchived)
+
+        if (!review) {
+            throw new Error('FAILED')
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { review },
+            error: null
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        })
+    }
+}
