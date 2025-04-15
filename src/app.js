@@ -53,6 +53,18 @@ app.use(cors(corsOptions));
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+app.get('/', (req, res) => {
+  return res.send(
+    ` <html>
+    <head><title>Masalakoottu</title></head>
+      <body>
+        <h1>Welcome To Masalakoottu</h1>
+      </body>
+    </html>
+    `
+  )
+})
+
 app.use('/api/webhook', webHookRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/categories', categoryRouter)
@@ -69,7 +81,7 @@ app.use('/api/charges', chargeRouter)
 app.use('/api/zones', zoneRouter)
 app.use('/api/reviews', reviewRouter)
 
-app.use("*", (req, res) => res.status(404).json({
+app.use((req, res) => res.status(404).json({
   success: false,
   message: 'Route not found',
   data: null,
