@@ -19,6 +19,7 @@ const { testimonialRouter } = require("./routes/testimonial.route");
 const { webHookRouter } = require("./routes/webhook.route");
 const { chargeRouter } = require("./routes/charge.route");
 const { zoneRouter } = require("./routes/zone.route");
+const { reviewRouter } = require("./routes/review.route");
 
 const PORT = process.env.PORT || 8080
 const ClientURL = process.env.ClientURL;
@@ -66,6 +67,7 @@ app.use('/api/banners', bannerRouter)
 app.use('/api/testimonials', testimonialRouter)
 app.use('/api/charges', chargeRouter)
 app.use('/api/zones', zoneRouter)
+app.use('/api/reviews', reviewRouter)
 
 app.use("*", (req, res) => res.status(404).json({
   success: false,
