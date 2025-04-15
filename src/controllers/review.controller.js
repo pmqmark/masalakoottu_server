@@ -194,9 +194,9 @@ module.exports.updateReviewCtrl = async (req, res) => {
             })
         }
 
-        const {rating, comment} = req.body;
+        const { rating, comment } = req.body;
 
-        const updatedReview = await updateReview(id, {rating, comment})
+        const updatedReview = await updateReview(id, { rating, comment })
 
         if (!updatedReview) {
             throw new Error('FAILED')
@@ -255,7 +255,7 @@ module.exports.deleteReviewCtrl = async (req, res) => {
                 error: 'UNAUTHORIZED'
             })
         }
-       
+
         const deletedReview = await deleteReview(id)
 
         if (!deletedReview) {
@@ -312,7 +312,7 @@ module.exports.updateReviewStatusCtrl = async (req, res, next) => {
             isArchived = false;
         }
 
-        const review = await updateReview(id, isArchived)
+        const review = await updateReview(id, { isArchived })
 
         if (!review) {
             throw new Error('FAILED')
