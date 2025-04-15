@@ -1,7 +1,8 @@
 const crypto = require('crypto');
-const { getOrderByMOId, updateOrder, clearCart } = require('./order.service');
+const { getOrderByMOId, updateOrder, clearCart, sendConfirmationMail } = require('./order.service');
 const { addUserIdToCoupon } = require('./discount.service');
 const { decrementProductQty } = require('./product.service');
+const { getUserById } = require('./user.service');
 
 module.exports.verifyPhonePeHash = async (phonePeHash) => {
     const username = process.env.PG_USERNAME;
@@ -31,6 +32,8 @@ module.exports.checkoutOrderCompletedHandler = async (payload) => {
 
     const { _id, couponCode, userId, items, buyMode } = order
 
+    const user = await getUserById(userId)
+
     const updateObj = {
         payStatus: 'completed', pgOrderId: orderId
     }
@@ -47,6 +50,17 @@ module.exports.checkoutOrderCompletedHandler = async (payload) => {
 
     await decrementProductQty(items);
     if (buyMode === "later") await clearCart(userId);
+
+    // Sent Confirmation Email
+    try {
+        const orderInfo = {
+            user, order
+        }
+        const info = await sendConfirmationMail(orderInfo)
+        console.log({ info })
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 

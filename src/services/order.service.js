@@ -174,16 +174,16 @@ module.exports.sendConfirmationMail = async (orderInfo) => {
             <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                 <h2 style="color: #2e6c80;">Thank you for shopping with us!</h2>
                 <p>Dear Customer,</p>
-                <p>
+                <h3>
                     ${order?.items?.length > 0
                     ? `Your order for ${order.items[0]?.name}${order.items.length > 1 ? " + more" : ""} has been successfully placed.`
                     : "Your order has been successfully placed."
                 }
-                </p>
-                ${order?.totalTax ? `<p>Total Tax: ₹${order.totalTax}</p>` : ``}
-                ${order?.discount ? `<p>Discount: ₹${order.discount}</p>` : ``}
-                ${order?.deliveryCharge ? `<p>Delivery Charge: ₹${order.deliveryCharge}</p>` : ``}
-                ${order?.amount ? `<p>Amount Paid: ₹${order.amount}</p>` : ``}
+                </h3>
+                ${`<p>Amount Paid: ₹${order?.amount ? order.amount : 0}</p>`}
+                ${`<p>Delivery Charge: ₹${order?.deliveryCharge ? order.deliveryCharge : 0}</p>`}
+                ${`<p>Discount: ₹${order.discount ? order.discount : 0}</p>`}
+                ${`<p>Total Tax: ₹${order?.totalTax ? order.totalTax : 0} (inclusive) </p>`}
                 <p>We hope you enjoy your purchase.</p>
                 <br/>
                 <p>Warm regards,</p>

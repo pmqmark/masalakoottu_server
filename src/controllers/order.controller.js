@@ -172,7 +172,7 @@ module.exports.checkoutCtrl = async (req, res) => {
             payMode,
             buyMode,
             couponCode,
-            totalTax,
+            totalTax: totalTax?.toFixed(2),
             discount: discountAmount,
             deliveryCharge: shippingCost,
             subTotal,
@@ -196,23 +196,24 @@ module.exports.checkoutCtrl = async (req, res) => {
             }
             await decrementProductQty(items);
             if (buyMode === "later") await clearCart(userId);
+
+            // Sent Confirmation Email
+            try {
+                const orderInfo = {
+                    user, order
+                }
+                const info = await sendConfirmationMail(orderInfo)
+                console.log({ info })
+            } catch (error) {
+                console.log(error)
+            }
+
             return res.status(201).json({ success: true, message: "Order placed successfully", data: { order } });
         }
 
         const paymentResponse = await onlinePayment(merchantOrderId, user, orderAmount);
         if (paymentResponse?.status !== 200) {
             return res.status(500).json({ success: false, message: 'Failed to initiate payment', error: 'FAILED_PAYMENT_INITIATION' });
-        }
-
-        // Sent Confirmation Email
-        try {
-            const orderInfo = {
-                user, order
-            }
-            const info = await sendConfirmationMail(orderInfo)
-            console.log({ info })
-        } catch (error) {
-            console.log(error)
         }
 
         return res.status(200).json({
