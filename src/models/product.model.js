@@ -61,27 +61,6 @@ const productSchema = new Schema(
       type: Number,
     },
 
-    reviews: [
-      {
-        userId: {
-          type: Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        rating: {
-          type: Number,
-          min: 1,
-          max: 5,
-        },
-        comment: {
-          type: String,
-        },
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-
     variations: [
       {
         variationId: { type: Schema.Types.ObjectId, ref: 'Variation' }, // e.g., 'Color'

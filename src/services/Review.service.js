@@ -6,13 +6,13 @@ module.exports.createReview = async (obj) => {
 
 module.exports.getReviewById = async (id) => {
     return await Review.findById(id)
-        .populate('userId', 'name email')
+        .populate('userId', 'firstName lastName')
         .populate('productId', 'name')
 }
 
 module.exports.getManyReviews = async (filters) => {
     return await Review.find(filters)
-        .populate('userId', 'name email')
+        .populate('userId', 'firstName lastName')
         .populate('productId', 'name')
 }
 

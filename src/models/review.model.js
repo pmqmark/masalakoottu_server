@@ -6,8 +6,9 @@ const ReviewSchema = new Schema({
     rating: { type: Number },
     comment: { type: String },
 
-    isArchived: { type: Boolean, default: false }
-});
+    isArchived: { type: Boolean, default: false },
+
+}, { timestamps: true });
 
 const Review = model('Review', ReviewSchema)
 

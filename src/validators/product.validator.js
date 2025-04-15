@@ -19,14 +19,7 @@ const productValidator = {
     body("images.*.location").optional().notEmpty().withMessage("Each image must have a location."),
     body("images.*.name").optional().isString(),
     body("images.*.key").optional().isString(),
-    
-    body("reviews").optional().isArray(),
-    body("reviews.*.userId").optional().isMongoId(),
-    body("reviews.*.rating")
-      .optional()
-      .isInt({ min: 1, max: 5 })
-      .withMessage("Rating must be between 1 and 5."),
-    body("reviews.*.comment").optional().isString(),
+
     body("variations").optional().isArray(),
     body("variations.*.variationId").optional().isMongoId(),
     body("variations.*.options").optional().isArray(),
@@ -68,14 +61,7 @@ const productValidator = {
     body("images.*.location").optional().notEmpty().withMessage("Each image must have a location."),
     body("images.*.name").optional().isString(),
     body("images.*.key").optional().isString(),
-    
-    body("reviews").optional().isArray(),
-    body("reviews.*.userId").optional().isMongoId(),
-    body("reviews.*.rating")
-      .optional()
-      .isInt({ min: 1, max: 5 })
-      .withMessage("Rating must be between 1 and 5."),
-    body("reviews.*.comment").optional().isString(),
+
     body("variations").optional().isArray(),
     body("variations.*.variationId").optional().isMongoId(),
     body("variations.*.options").optional().isArray(),

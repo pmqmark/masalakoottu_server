@@ -10,13 +10,13 @@ module.exports.createProductCtrl = async (req, res) => {
     try {
         const {
             name, description, brand, price, thumbnail, images,
-            batches, reviews, variations, isFeatured, tags, isArchived,
+            batches, variations, isFeatured, tags, isArchived,
             hsn, tax, weight, videoLink
         } = req.body;
 
         const createObj = {
             name, description, brand, price, thumbnail, images,
-            batches, reviews, variations, isFeatured, tags, isArchived,
+            batches, variations, isFeatured, tags, isArchived,
             hsn, tax, weight, videoLink
         }
 
