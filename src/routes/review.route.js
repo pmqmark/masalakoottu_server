@@ -14,8 +14,8 @@ reviewRouter.get('/:id', reviewCtrl.getReviewByIdCtrl);
 
 reviewRouter.use(authMiddleware)
 
-reviewRouter.post('', reviewValidator.create, validate, (req, res, next) => ownerChecker(req.body.userId), reviewCtrl.createReviewCtrl);
-reviewRouter.put('/:id', reviewValidator.update, validate, (req, res, next) => ownerChecker(req.body.userId), reviewCtrl.updateReviewCtrl);
+reviewRouter.post('', reviewValidator.create, validate, ownerChecker("body", "userId"), reviewCtrl.createReviewCtrl);
+reviewRouter.put('/:id', reviewValidator.update, validate, reviewCtrl.updateReviewCtrl);
 reviewRouter.delete('/:id', reviewCtrl.deleteReviewCtrl);
 
 module.exports = { reviewRouter };

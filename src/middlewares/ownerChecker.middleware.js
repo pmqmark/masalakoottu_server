@@ -1,5 +1,6 @@
-module.exports.ownerChecker = (userId) => (req, res, next) => {
-    const isOwner = req.user.userId === userId;
+module.exports.ownerChecker = (obj, field) => (req, res, next) => {
+    const isOwner = req.user.userId === req[obj][field];
+    
     const isAdmin = req.user.role === 'admin';
 
     if (isAdmin || isOwner) {

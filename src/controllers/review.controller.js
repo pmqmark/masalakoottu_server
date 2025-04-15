@@ -182,9 +182,21 @@ module.exports.updateReviewCtrl = async (req, res) => {
             })
         }
 
-        const updateObj = req.body;
+        const isOwner = req.user.userId === String(Review?.userId?._id);
+        const isAdmin = req.user.role === 'admin';
 
-        const updatedReview = await updateReview(id, updateObj)
+        if (!(isAdmin || isOwner)) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized',
+                data: null,
+                error: 'UNAUTHORIZED'
+            })
+        }
+
+        const {rating, comment} = req.body;
+
+        const updatedReview = await updateReview(id, {rating, comment})
 
         if (!updatedReview) {
             throw new Error('FAILED')
@@ -232,7 +244,7 @@ module.exports.deleteReviewCtrl = async (req, res) => {
             })
         }
 
-        const isOwner = req.user.userId === Review?.userId;
+        const isOwner = req.user.userId === String(Review?.userId?._id);
         const isAdmin = req.user.role === 'admin';
 
         if (!(isAdmin || isOwner)) {
