@@ -2,19 +2,12 @@ const nodemailer = require('nodemailer');
 const { default: axios } = require("axios");
 const { Otp } = require('../models/otp.model');
 const { OAuth2Client } = require("google-auth-library");
+const { sendEmail } = require('../utils/mailer.util');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 module.exports.sendOTPViaEmail = async (email, OTP) => {
     try {
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.MAIL_USER,
-                pass: process.env.MAIL_PASSWORD,
-            },
-        });
-
-        await transporter.sendMail({
+        const mailObj = {
             from: `"Masalakoottu" <${process.env.MAIL_USER}>`,
             to: email,
             subject: "OTP for Authentication",
@@ -22,7 +15,9 @@ module.exports.sendOTPViaEmail = async (email, OTP) => {
                 <span>OTP: ${OTP}</span>
                 <p>Use this OTP within 5 minutes</p>
             `,
-        });
+        }
+
+        return await sendEmail(mailObj)
     } catch (error) {
         console.error('Error sending OTP via email:', error);
         throw error;
@@ -45,7 +40,7 @@ module.exports.sendOTPViaSMS = async (mobile, OTP) => {
             },
         };
 
-        await axios(options);
+        return await axios(options);
     } catch (error) {
         console.error('Error sending OTP via SMS:', error);
         throw error;

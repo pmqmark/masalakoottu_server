@@ -11,13 +11,13 @@ module.exports.createProductCtrl = async (req, res) => {
         const {
             name, description, brand, price, thumbnail, images,
             batches, reviews, variations, isFeatured, tags, isArchived,
-            hsn, tax, weight
+            hsn, tax, weight, videoLink
         } = req.body;
 
         const createObj = {
             name, description, brand, price, thumbnail, images,
             batches, reviews, variations, isFeatured, tags, isArchived,
-            hsn, tax, weight
+            hsn, tax, weight, videoLink
         }
 
         const product = await createProduct(createObj)

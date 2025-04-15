@@ -45,6 +45,8 @@ const productValidator = {
     body("batches.*.quantity").isInt({ min: 0 }).withMessage("Batch quantity must be at least 0"),
     body("batches.*.mfgDate").optional({ values: "falsy" }).isISO8601().toDate().withMessage("Invalid manufacturing date"),
     body("batches.*.expDate").optional({ values: "falsy" }).isISO8601().toDate().withMessage("Invalid expiry date"),
+
+    body("videoLink").optional().isString(),
   ],
 
   update: [
@@ -92,6 +94,8 @@ const productValidator = {
     body("batches.*.quantity").isInt({ min: 0 }).withMessage("Batch quantity must be at least 0"),
     body("batches.*.mfgDate").optional({ values: "falsy" }).isISO8601().toDate().withMessage("Invalid manufacturing date"),
     body("batches.*.expDate").optional({ values: "falsy" }).isISO8601().toDate().withMessage("Invalid expiry date"),
+
+    body("videoLink").optional().isString(),
   ],
 };
 

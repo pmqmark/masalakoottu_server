@@ -96,8 +96,10 @@ const OrderSchema = new mongoose.Schema(
 
     deliveryType: { type: String, enum: deliveryTypeList, default: 'Standard' },
 
-    waybill: { type: String },
+    waybill: { type: String }, // <= a.k.a Tracking id
     delivered_on: { type: Date },
+
+    deliveryPartner: { type: String }
 
   },
   { timestamps: true }

@@ -131,6 +131,7 @@ const productSchema = new Schema(
       },
     ],
 
+    videoLink: { type: String },
 
   },
   {

@@ -4,12 +4,13 @@ const { createUser, updateUser, updateUserStatus, getUserById, getManyUsers, get
     addToWishlist, createAddress, updateAddress, deleteAddress, fetchManyAddress,
     fetchSingleAddress,
     updateCart,
-    fetchOneAddress, } = require("../services/user.service");
+    fetchOneAddress,
+    setCart, } = require("../services/user.service");
 const { hashPassword } = require("../utils/password.util");
 const { validateEmail, validateMobile } = require("../utils/validate.util");
 const { validateOTPWithMobile, validateOTPWithEmail, OTPVerificationStatus } = require("../services/auth.service");
 const { genderList, roleList } = require("../config/data");
-const { checkIfVariationExists } = require("../services/product.service");
+const { checkIfVariationExists, getProductById } = require("../services/product.service");
 const { findManyOrders } = require("../services/order.service");
 
 // Accessible to Public
@@ -461,11 +462,109 @@ module.exports.getManyUsersCtrl = async (req, res, next) => {
     }
 }
 
+module.exports.setCartCtrl = async (req, res) => {
+    try {
+        const { userId } = req.user;
+        const { cart = [] } = req.body;
+
+        if (!isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid Id',
+                data: null,
+                error: 'BAD_REQUEST'
+            });
+        }
+
+        if (!Array.isArray(cart)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cart must be an array',
+                data: null,
+                error: 'BAD_REQUEST'
+            });
+        }
+
+        const user = await getUserById(userId);
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'User not found',
+                data: null,
+                error: 'BAD_REQUEST'
+            });
+        }
+
+        for (const { productId, variations = [] } of cart) {
+            if (!productId || !isValidObjectId(productId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid product ID in cart item',
+                    data: null,
+                    error: 'BAD_REQUEST'
+                });
+            }
+
+            const product = await getProductById(productId)
+
+            if (!product) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Product not found: ${productId}`,
+                    data: null,
+                    error: 'BAD_REQUEST'
+                });
+            }
+
+            if (!Array.isArray(variations)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Variations must be an array',
+                    data: null,
+                    error: 'BAD_REQUEST'
+                });
+            }
+
+            if (variations?.length > 0) {
+                const existingVariation = await checkIfVariationExists(productId, variations);
+                if (!existingVariation) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Variation doesn't exist in product: ${productId}`,
+                        data: null,
+                        error: 'BAD_REQUEST'
+                    });
+                }
+            }
+        }
+
+        await setCart(userId, cart);
+        const updatedCart = await getCart(userId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: { cart: updatedCart },
+            error: null
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: error?.message || "Internal Server error",
+            data: null,
+            error: 'INTERNAL_SERVER_ERROR'
+        });
+    }
+};
+
+
 module.exports.addToCartCtrl = async (req, res) => {
     try {
         const { userId } = req.user;
 
-        const { productId, quantity, variations=[] } = req.body;
+        const { productId, quantity, variations = [] } = req.body;
 
         if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
             return res.status(400).json({
@@ -487,7 +586,7 @@ module.exports.addToCartCtrl = async (req, res) => {
             })
         }
 
-        console.log({userId, productId, quantity, variations})
+        console.log({ userId, productId, quantity, variations })
 
         await addToCart(userId, productId, quantity, variations);
 

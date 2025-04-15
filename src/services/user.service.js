@@ -84,6 +84,29 @@ module.exports.addToCart = async (userId, productId, quantity, variations = []) 
     return user.cart
 }
 
+module.exports.setCart = async (userId, cart) => {
+    const user = await User.findById(userId)
+
+    if (!user) {
+        throw new Error('User not found')
+    }
+
+    if (!Array.isArray(cart)) {
+        throw new Error('Invalid cart data');
+    }
+
+    for (let item of cart) {
+        if (!item.productId || !item.quantity || item.quantity <= 0) {
+            throw new Error('Invalid item in cart');
+        }
+    }
+
+    user.cart = cart;
+
+    await user.save();
+    return user.cart
+}
+
 module.exports.updateCart = async (userId, itemId, quantity) => {
     if (quantity < 0) {
         throw new Error("QUANTITY_CANNOT_BE_NEGATIVE");
@@ -255,4 +278,5 @@ module.exports.deleteAddress = async (id) => {
 module.exports.countUsers = async (filters = {}) => {
     return await User.countDocuments(filters)
 }
+
 
