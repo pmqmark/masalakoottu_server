@@ -1,5 +1,5 @@
 const { isValidObjectId } = require("mongoose");
-const { createReview, updateReview, getReviewById, getManyReviews, deleteReview } = require("../services/review.service.js");
+const { createReview, updateReview, getReviewById, getManyReviews, deleteReview } = require("../services/reviews.service.js");
 
 module.exports.createReviewCtrl = async (req, res) => {
     try {
