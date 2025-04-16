@@ -19,9 +19,9 @@ module.exports.dashboardMetricsCtrl = async (req, res) => {
         const totalSale = deliveredOrders.reduce((total, order) => total + parseFloat(order.amount), 0);
         const totalRevenue = deliveredOrders.reduce((total, order) => total + parseFloat(order.amount) - parseFloat(order.deliveryCharge), 0);
         const allProducts = await getManyProducts()
-        const totalItems = allProducts.reduce((acc, item) => { 
-            const prodQty = item?.batches?.reduce((com, elem)=> com + elem?.quantity, 0) || 0;
-            return acc + prodQty 
+        const totalItems = allProducts.reduce((acc, item) => {
+            const prodQty = item?.batches?.reduce((com, elem) => com + elem?.quantity, 0) || 0;
+            return acc + prodQty
         }, 0)
 
         return res.status(200).json({
@@ -544,3 +544,26 @@ module.exports.dashboardCtrl = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error", error: 'INTERNAL_SERVER_ERROR' });
     }
 };
+
+
+module.exports.stockReport = async (req, res) => {
+    try {
+        const products = await getManyProducts({}, { name: 1, hsn: 1, batches: 1 })
+
+        let result = products?.map((item) => {
+            const stock = item?.batches?.reduce((acc, val) => acc + val?.quantity, 0) || 0;
+            item.stock = stock;
+            return item;
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: 'success',
+            data: {result},
+            error: null
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: 'INTERNAL_SERVER_ERROR' });
+    }
+}
