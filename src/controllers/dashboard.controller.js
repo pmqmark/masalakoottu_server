@@ -18,10 +18,11 @@ module.exports.dashboardMetricsCtrl = async (req, res) => {
         const deliveredOrders = await findManyOrders({ status: "delivered" });
         const totalSale = deliveredOrders.reduce((total, order) => total + parseFloat(order.amount), 0);
         const totalRevenue = deliveredOrders.reduce((total, order) => total + parseFloat(order.amount) - parseFloat(order.deliveryCharge), 0);
-        const allProducts = await getManyProducts({}, { stock: 1 })
-        const totalItems = allProducts.reduce((acc, item) => { return acc + item?.stock }, 0)
-
-        const cancelledOrders = await countOrders({ status: "cancelled" });
+        const allProducts = await getManyProducts()
+        const totalItems = allProducts.reduce((acc, item) => { 
+            const prodQty = item?.batches?.reduce((com, elem)=> com + elem?.quantity, 0) || 0;
+            return acc + prodQty 
+        }, 0)
 
         return res.status(200).json({
             success: true,
